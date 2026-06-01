@@ -1,8 +1,6 @@
 # How to Contribute
 
-Ikuti panduan langkah demi langkah ini untuk berkontribusi ke proyek ini menggunakan Git CLI. Panduan ini dirancang khusus untuk meminimalkan dan menghindari konflik pada file, terutama `README.md`.
-
-## Langkah-Langkah Berkontribusi
+Ikuti panduan langkah demi langkah ini untuk berkontribusi ke proyek ini menggunakan Git CLI. Panduan ini dirancang khusus untuk meminimalkan dan menghindari konflik pada file.
 
 ### 1. Perbarui Branch Utama
 Sebelum mulai mengerjakan sesuatu, pastikan branch utama (`main` atau `master`) di komputer Anda sudah sinkron dengan versi terbaru di server.
@@ -18,7 +16,7 @@ git checkout -b fitur-baru-anda
 ```
 
 ### 3. Lakukan Perubahan
-Edit file (seperti `README.md`) sesuai kebutuhan Anda.
+Edit file sesuai kebutuhan.
 
 ### 4. Simpan Perubahan (Commit)
 Simpan perubahan Anda secara lokal dengan pesan commit yang jelas.
@@ -44,7 +42,7 @@ git push origin fitur-baru-anda
 ```
 
 ### 7. Buat Pull Request
-Buka halaman repositori di browser (GitHub/GitLab) dan klik tombol **Compare & pull request**. Berikan deskripsi mengenai apa yang Anda ubah.
+Buka halaman repositori di browser (GitHub/GitLab) dan klik tombol **Compare & pull request**. Biarkan yg punya repo yg approve.
 
 ---
 *Tips: Selalu lakukan `git pull` secara rutin untuk menjaga repositori Anda tetap up-to-date.*

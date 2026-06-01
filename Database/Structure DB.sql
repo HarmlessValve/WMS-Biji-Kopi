@@ -1,15 +1,15 @@
 DROP VIEW IF EXISTS stock_summary;
-
+DROP VIEW IF EXISTS vw_user_roles;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS outgoing_transactions;
 DROP TABLE IF EXISTS incoming_transactions;
 DROP TABLE IF EXISTS stock;
 DROP TABLE IF EXISTS coffee_origins;
 DROP TABLE IF EXISTS user_roles;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS roles;
 DROP TABLE IF EXISTS coffee_types;
 DROP TABLE IF EXISTS coffee_categories;
+DROP TABLE IF EXISTS roles;
+DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS destinations;
 DROP TABLE IF EXISTS suppliers;
 

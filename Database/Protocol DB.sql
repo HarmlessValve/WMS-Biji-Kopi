@@ -145,8 +145,13 @@ WHERE ct.is_active = TRUE;
 
 ----------------------------------------------------------------------
 -- 1. Isi Roles & Users
-INSERT INTO roles (role_name, description) VALUES ('Admin', 'Kepala Gudang');
-INSERT INTO users (username, password, role_id) VALUES ('budi_gudang', 'password123', 1);
+INSERT INTO roles (role_name, description) VALUES ('Admin', 'Kepala Gudang') ON CONFLICT (role_name) DO NOTHING;
+INSERT INTO users (username, password) VALUES ('budi_gudang', 'password123') ON CONFLICT (username) DO NOTHING;
+-- Memasangkan user budi_gudang dengan role Admin tanpa ID statis (mencegah error serial sequence)
+INSERT INTO user_roles (user_id, role_id) VALUES (
+    (SELECT user_id FROM users WHERE username = 'budi_gudang'),
+    (SELECT role_id FROM roles WHERE role_name = 'Admin')
+) ON CONFLICT DO NOTHING;
 
 -- 2. Isi Suppliers & Destinations
 INSERT INTO suppliers (company_name, address, phone) VALUES ('Koperasi Tani Gayo', 'Aceh', '0812345');

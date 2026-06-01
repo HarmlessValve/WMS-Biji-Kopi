@@ -1,0 +1,21 @@
+## Ignore Visual Studio & .NET temporary files
+[Bb]in/
+[Oo]bj/
+[Oo]ut/
+.vs/
+*.user
+*.suo
+*.userprefs
+*.dbmdl
+
+## Ignore build output and temp folders
+TestResults/
+[Dd]ebug/
+[Rr]elease/
+
+## Ignore Mac OS folder settings
+.DS_Store
+
+## Abaikan file konfigurasi koneksi yang berisi kredensial asli
+## Kita akan track versi example-nya saja
+CoffeeWMS/Data/DatabaseHelper.cs
