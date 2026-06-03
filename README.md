@@ -1,48 +1,45 @@
-# How to Contribute
+# CoffeeWMS
 
-Ikuti panduan langkah demi langkah ini untuk berkontribusi ke proyek ini menggunakan Git CLI. Panduan ini dirancang khusus untuk meminimalkan dan menghindari konflik pada file.
+## Cara Menambahkan Menu di Sidebar / Dashboard
+Menu aplikasi pada CoffeeWMS dibuat secara dinamis menggunakan C# murni tanpa Visual Studio Designer. Jika Anda ingin menambahkan tombol menu baru, ikuti panduan berikut:
 
-### 1. Perbarui Branch Utama
-Sebelum mulai mengerjakan sesuatu, pastikan branch utama (`main` atau `master`) di komputer Anda sudah sinkron dengan versi terbaru di server.
-```bash
-git checkout main
-git pull origin main
+1. Buka file `Views/MainForm.cs`.
+2. Cari metode `InitializeMenus()`.
+3. Gunakan metode `AddMenuItem()` untuk menambahkan tombol baru.
+4. Tambahkan `currentTop += 40;` di baris selanjutnya untuk memberi jarak (margin) ke bawah.
+
+**Contoh Penulisan:**
+```csharp
+// Menambahkan menu Stok Barang
+AddMenuItem("📦 Stok Barang", currentTop, ShowStokBarang);
+currentTop += 40;
 ```
-
-### 2. Buat Branch Fitur
-Jangan pernah mengedit langsung di branch `main`. Buatlah branch baru untuk setiap fitur atau perbaikan.
-```bash
-git checkout -b fitur-baru-anda
-```
-
-### 3. Lakukan Perubahan
-Edit file sesuai kebutuhan.
-
-### 4. Simpan Perubahan (Commit)
-Simpan perubahan Anda secara lokal dengan pesan commit yang jelas.
-```bash
-git add .
-git commit -m "Menambahkan panduan kontribusi di README"
-```
-
-### 5. Ambil Perubahan Terbaru (Anti-Konflik)
-**PENTING:** Sebelum melakukan push, tarik perubahan terbaru dari `main` untuk memastikan tidak ada perubahan orang lain yang bertabrakan dengan milik Anda.
-```bash
-git checkout main
-git pull origin main
-git checkout fitur-baru-anda
-git merge main
-```
-*Jika terjadi konflik saat merge, Git akan memberitahu Anda. Selesaikan konflik tersebut di editor, simpan, lalu commit.*
-
-### 6. Push Branch Anda
-Kirimkan branch fitur Anda ke repositori pusat.
-```bash
-git push origin fitur-baru-anda
-```
-
-### 7. Buat Pull Request
-Buka halaman repositori di browser (GitHub/GitLab) dan klik tombol **Compare & pull request**. Biarkan yg punya repo yg approve.
 
 ---
-*Tips: Selalu lakukan `git pull` secara rutin untuk menjaga repositori Anda tetap up-to-date.*
+
+## Panduan Kontribusi Singkat (Git Cheat Sheet)
+
+Untuk meminimalkan konflik, ikuti alur Git sederhana berikut:
+
+```bash
+# 1. Sinkronisasi dengan main terbaru
+git checkout main
+git pull origin main
+
+# 2. Buat dan masuk ke branch fitur baru
+git checkout -b nama-branch-fitur-anda
+
+# 3. (Lakukan perubahan/kodingan di sini)
+
+# 4. Simpan perubahan ke Git (Commit)
+git add .
+git commit -m "Pesan commit singkat"
+
+# 5. Tarik perubahan terbaru dulu sebelum push (mencegah konflik)
+git pull origin main
+
+# 6. Push kode terbaru ke branch Anda
+git push origin nama-branch-fitur-anda
+```
+
+Setelah selesai, buat **Pull Request** via web repositori Anda (GitHub/GitLab). Biarkan Admin yang menyetujui (Approve).

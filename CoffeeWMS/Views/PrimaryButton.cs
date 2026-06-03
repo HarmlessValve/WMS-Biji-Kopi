@@ -3,9 +3,9 @@ using System.Drawing;
 using System.Windows.Forms;
 using CoffeeWMS.Theme;
 
-namespace CoffeeWMS.Forms
+namespace CoffeeWMS.Views
 {
-    public class PrimaryButton : Button
+    public partial class PrimaryButton : Button
     {
         public PrimaryButton()
         {

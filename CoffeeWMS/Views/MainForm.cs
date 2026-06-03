@@ -4,27 +4,33 @@ using System.Windows.Forms;
 using CoffeeWMS.Models;
 using CoffeeWMS.Theme;
 
-namespace CoffeeWMS.Forms
+using CoffeeWMS.Views.Interfaces;
+
+namespace CoffeeWMS.Views
 {
-    public class MainForm : BaseForm
+    public partial class MainForm : BaseForm, IMainView
     {
+        public event EventHandler ViewLoaded;
+        public event EventHandler LogoutRequested;
+
         public MainForm()
         {
+            InitializeComponent();
             InitializeMenus();
-            ShowDashboard();
+            this.Load += (s, e) => ViewLoaded?.Invoke(this, EventArgs.Empty);
         }
 
         private void InitializeMenus()
         {
             // Adding Menus to sidebar
-            int currentTop = 60;
+            int currentTop = 90; // Diturunkan agar tidak tertimpa panel Logo
             
             AddMenuItem("📊 Dashboard", currentTop, ShowDashboard);
             currentTop += 40;
 
             if (Session.IsAdmin)
             {
-                AddMenuItem("👥 Pengguna", currentTop, () => LoadView(new UserManagementForm(), "Manajemen Pengguna"));
+                AddMenuItem("👥 Pengguna", currentTop, ShowUserManagement);
                 currentTop += 40;
             }
 
@@ -37,7 +43,7 @@ namespace CoffeeWMS.Forms
             // Logout
             Button btnLogout = AddMenuItem("🚪 Logout", this.pnlSidebar.Height - 60, null);
             btnLogout.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
-            btnLogout.Click += (s, e) => { this.Close(); };
+            btnLogout.Click += (s, e) => LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private Button AddMenuItem(string text, int top, Action onClick)
@@ -47,16 +53,16 @@ namespace CoffeeWMS.Forms
             btn.TextAlign = ContentAlignment.MiddleLeft;
             btn.FlatStyle = FlatStyle.Flat;
             btn.FlatAppearance.BorderSize = 0;
-            btn.BackColor = DesignTokens.Primary;
+            btn.BackColor = Color.FromArgb(41, 53, 65);
             btn.ForeColor = Color.White;
-            btn.Font = DesignTokens.BodyFont;
-            btn.Width = DesignTokens.SidebarWidth;
+            btn.Font = new Font("Segoe UI", 10F);
+            btn.Width = 250;
             btn.Height = 40;
             btn.Top = top;
             btn.Cursor = Cursors.Hand;
             
-            btn.MouseEnter += (s, e) => btn.BackColor = DesignTokens.PrimaryLight;
-            btn.MouseLeave += (s, e) => btn.BackColor = DesignTokens.Primary;
+            btn.MouseEnter += (s, e) => btn.BackColor = Color.FromArgb(61, 73, 85);
+            btn.MouseLeave += (s, e) => btn.BackColor = Color.FromArgb(41, 53, 65);
 
             if (onClick != null)
                 btn.Click += (s, e) => onClick();
@@ -65,13 +71,13 @@ namespace CoffeeWMS.Forms
             return btn;
         }
 
-        private void ShowDashboard()
+        public void ShowDashboard()
         {
             Panel p = new Panel();
             
             Label l = new Label();
             l.Text = "Selamat datang di CoffeeWMS!";
-            l.Font = DesignTokens.HeadingFont;
+            l.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
             l.AutoSize = true;
             l.Location = new Point(20, 20);
             p.Controls.Add(l);
@@ -90,11 +96,24 @@ namespace CoffeeWMS.Forms
             Panel p = new Panel();
             Label l = new Label();
             l.Text = $"Modul {module} akan datang.";
-            l.Font = DesignTokens.BodyFont;
+            l.Font = new Font("Segoe UI", 10F);
             l.AutoSize = true;
             l.Location = new Point(20, 20);
             p.Controls.Add(l);
             LoadView(p, module);
+        }
+
+        public void ShowUserManagement()
+        {
+            var umView = new UserManagementForm();
+            var umController = new CoffeeWMS.Controllers.UserManagementController(umView, new CoffeeWMS.Repositories.UserRepository());
+            LoadView(umView, "Manajemen Pengguna");
+            umView.TriggerLoad();
+        }
+
+        public void CloseView()
+        {
+            this.Close();
         }
     }
 }
