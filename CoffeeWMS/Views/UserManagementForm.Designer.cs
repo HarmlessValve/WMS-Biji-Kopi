@@ -60,7 +60,7 @@ namespace CoffeeWMS.Views
             this.btnTambah.FlatStyle = FlatStyle.Flat;
             this.btnTambah.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             this.btnTambah.ForeColor = Color.White;
-            this.btnTambah.Location = new Point(20, 10);
+            this.btnTambah.Location = new Point(0, 10);
             this.btnTambah.Name = "btnTambah";
             this.btnTambah.Size = new Size(150, 36);
             this.btnTambah.TabIndex = 0;
@@ -73,7 +73,7 @@ namespace CoffeeWMS.Views
             this.btnHapus.FlatStyle = FlatStyle.Flat;
             this.btnHapus.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             this.btnHapus.ForeColor = Color.White;
-            this.btnHapus.Location = new Point(180, 10);
+            this.btnHapus.Location = new Point(160, 10);
             this.btnHapus.Name = "btnHapus";
             this.btnHapus.Size = new Size(150, 36);
             this.btnHapus.TabIndex = 1;
