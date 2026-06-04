@@ -26,6 +26,7 @@ namespace CoffeeWMS.Views
             DataGridViewCellStyle dataGridViewCellStyle2 = new DataGridViewCellStyle();
             this.pnlTop = new Panel();
             this.btnTambah = new PrimaryButton();
+            this.btnHapus = new PrimaryButton();
             this.dgvUsers = new DataGridView();
             this.pnlForm = new Panel();
             this.lblTitle = new Label();
@@ -46,6 +47,7 @@ namespace CoffeeWMS.Views
             // pnlTop
             // 
             this.pnlTop.Controls.Add(this.btnTambah);
+            this.pnlTop.Controls.Add(this.btnHapus);
             this.pnlTop.Dock = DockStyle.Top;
             this.pnlTop.Location = new Point(0, 0);
             this.pnlTop.Name = "pnlTop";
@@ -62,8 +64,21 @@ namespace CoffeeWMS.Views
             this.btnTambah.Name = "btnTambah";
             this.btnTambah.Size = new Size(150, 36);
             this.btnTambah.TabIndex = 0;
-            this.btnTambah.Text = "+ Tambah Pengguna";
+            this.btnTambah.Text = "Tambah Pengguna";
             this.btnTambah.UseVisualStyleBackColor = false;
+            // 
+            // btnHapus
+            // 
+            this.btnHapus.BackColor = Color.FromArgb(222, 5, 0);
+            this.btnHapus.FlatStyle = FlatStyle.Flat;
+            this.btnHapus.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.btnHapus.ForeColor = Color.White;
+            this.btnHapus.Location = new Point(180, 10);
+            this.btnHapus.Name = "btnHapus";
+            this.btnHapus.Size = new Size(150, 36);
+            this.btnHapus.TabIndex = 1;
+            this.btnHapus.Text = "Hapus Pengguna";
+            this.btnHapus.UseVisualStyleBackColor = false;
             // 
             // dgvUsers
             // 
@@ -189,10 +204,10 @@ namespace CoffeeWMS.Views
             // 
             // btnBatal
             // 
-            this.btnBatal.BackColor = Color.LightGray;
+            this.btnBatal.BackColor = Color.FromArgb(222, 5, 0);
             this.btnBatal.FlatStyle = FlatStyle.Flat;
             this.btnBatal.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
-            this.btnBatal.ForeColor = Color.Black;
+            this.btnBatal.ForeColor = Color.White;
             this.btnBatal.Location = new Point(20, 360);
             this.btnBatal.Name = "btnBatal";
             this.btnBatal.Size = new Size(140, 36);
@@ -202,7 +217,7 @@ namespace CoffeeWMS.Views
             // 
             // btnSimpan
             // 
-            this.btnSimpan.BackColor = Color.FromArgb(41, 53, 65);
+            this.btnSimpan.BackColor = Color.FromArgb(0, 170, 100);
             this.btnSimpan.FlatStyle = FlatStyle.Flat;
             this.btnSimpan.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
             this.btnSimpan.ForeColor = Color.White;
@@ -234,6 +249,7 @@ namespace CoffeeWMS.Views
 
         private System.Windows.Forms.DataGridView dgvUsers;
         private CoffeeWMS.Views.PrimaryButton btnTambah;
+        private CoffeeWMS.Views.PrimaryButton btnHapus;
         private CoffeeWMS.Views.PrimaryButton btnSimpan;
         private CoffeeWMS.Views.PrimaryButton btnBatal;
         

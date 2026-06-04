@@ -24,6 +24,7 @@ namespace CoffeeWMS.Views
         {
             InitializeComponent();
             btnTambah.Click += (s, e) => ShowForm(0);
+            btnHapus.Click += (s, e) => Console.WriteLine("Hapus trigger");
             btnBatal.Click += (s, e) => { pnlForm.Visible = false; };
         }
 

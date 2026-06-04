@@ -47,6 +47,11 @@ namespace CoffeeWMS.Controllers
                 _view.ShowMessage("Password tidak boleh kosong untuk user baru!", true);
                 return;
             }
+            if (e.SelectedRoleIds == null || !e.SelectedRoleIds.Any())
+            {
+                _view.ShowMessage("Gagal menyimpan! Pengguna minimal harus memiliki 1 Role.", true);
+                return;
+            }
 
             try
             {
@@ -60,6 +65,7 @@ namespace CoffeeWMS.Controllers
                     _repo.UpdateUser(e.UserId, e.Username, e.Password, e.IsActive, e.SelectedRoleIds.ToArray());
                     _view.ShowMessage("Berhasil disimpan!", false);
                 }
+
                 _view.CloseForm();
                 OnLoadUsersRequested(this, EventArgs.Empty);
             }

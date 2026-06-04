@@ -9,7 +9,7 @@ namespace CoffeeWMS.Views
     {
         public PrimaryButton()
         {
-            this.BackColor = DesignTokens.Primary;
+            // this.BackColor = DesignTokens.Primary;
             this.ForeColor = Color.White;
             this.FlatStyle = FlatStyle.Flat;
             this.FlatAppearance.BorderSize = 0;
@@ -21,13 +21,15 @@ namespace CoffeeWMS.Views
         protected override void OnMouseEnter(EventArgs e)
         {
             base.OnMouseEnter(e);
-            this.BackColor = DesignTokens.PrimaryLight;
+            // this.BackColor = DesignTokens.PrimaryLight;
+            this.ForeColor = Color.Black;
         }
 
         protected override void OnMouseLeave(EventArgs e)
         {
             base.OnMouseLeave(e);
-            this.BackColor = DesignTokens.Primary;
+            // this.BackColor = DesignTokens.Primary;
+            this.ForeColor = Color.White;
         }
     }
 }

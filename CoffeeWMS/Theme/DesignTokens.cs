@@ -6,7 +6,7 @@ namespace CoffeeWMS.Theme
     {
         // Colors
         public static readonly Color Primary = ColorTranslator.FromHtml("#2C5F2E");
-        public static readonly Color PrimaryLight = ColorTranslator.FromHtml("#4A7C4E");
+        public static readonly Color PrimaryLight = ColorTranslator.FromHtml("#227700ff");
         public static readonly Color PrimaryDark = ColorTranslator.FromHtml("#1A3D1C");
         public static readonly Color Accent = ColorTranslator.FromHtml("#6F4E37");
         public static readonly Color AccentLight = ColorTranslator.FromHtml("#A07855");

@@ -25,20 +25,20 @@ namespace CoffeeWMS.Views
             // Adding Menus to sidebar
             int currentTop = 90; // Diturunkan agar tidak tertimpa panel Logo
             
-            AddMenuItem("📊 Dashboard", currentTop, ShowDashboard);
+            AddMenuItem("Dashboard", currentTop, ShowDashboard);
             currentTop += 40;
 
             if (Session.IsAdmin)
             {
-                AddMenuItem("👥 Pengguna", currentTop, ShowUserManagement);
+                AddMenuItem("Pengguna", currentTop, ShowUserManagement);
                 currentTop += 40;
             }
 
-            AddMenuItem("📦 Penerimaan", currentTop, () => ShowPlaceholder("Input Penerimaan Kopi"));
+            AddMenuItem("Penerimaan", currentTop, () => ShowPlaceholder("Input Penerimaan Kopi"));
             currentTop += 40;
-            AddMenuItem("📤 Pengiriman", currentTop, () => ShowPlaceholder("Input Pengiriman Kopi"));
+            AddMenuItem("Pengiriman", currentTop, () => ShowPlaceholder("Input Pengiriman Kopi"));
             currentTop += 40;
-            AddMenuItem("📈 Laporan", currentTop, () => ShowPlaceholder("Laporan Transaksi"));
+            AddMenuItem("Laporan", currentTop, () => ShowPlaceholder("Laporan Transaksi"));
             
             // Logout
             Button btnLogout = AddMenuItem("🚪 Logout", this.pnlSidebar.Height - 60, null);
@@ -88,7 +88,7 @@ namespace CoffeeWMS.Views
             btn.Width = 200;
             p.Controls.Add(btn);
 
-            LoadView(p, "📊 Dashboard");
+            LoadView(p, "Dashboard");
         }
 
         private void ShowPlaceholder(string module)
