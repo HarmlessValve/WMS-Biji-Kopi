@@ -90,3 +90,20 @@ BEGIN
     VALUES (NULL, 'UPDATE_USER', 'Updated user_id: ' || p_user_id);
 END;
 $$;
+
+-- 5. Stored Procedure: Soft Delete Pengguna
+CREATE OR REPLACE PROCEDURE sp_soft_delete_user(
+    p_user_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE users 
+    SET is_active = FALSE
+    WHERE user_id = p_user_id;
+    
+    -- Catat di activity_logs
+    INSERT INTO activity_logs (user_id, action, description) 
+    VALUES (NULL, 'SOFT_DELETE_USER', 'Deactivated user_id: ' || p_user_id);
+END;
+$$;
