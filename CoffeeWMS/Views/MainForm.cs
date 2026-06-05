@@ -32,6 +32,8 @@ namespace CoffeeWMS.Views
             {
                 AddMenuItem("Pengguna", currentTop, ShowUserManagement);
                 currentTop += 40;
+                AddMenuItem("Master Data", currentTop, ShowDataManagement);
+                currentTop += 40;
             }
 
             AddMenuItem("Penerimaan", currentTop, () => ShowPlaceholder("Input Penerimaan Kopi"));
@@ -73,22 +75,31 @@ namespace CoffeeWMS.Views
 
         public void ShowDashboard()
         {
-            Panel p = new Panel();
-            
-            Label l = new Label();
-            l.Text = "Selamat datang di CoffeeWMS!";
-            l.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
-            l.AutoSize = true;
-            l.Location = new Point(20, 20);
-            p.Controls.Add(l);
+            if (Session.IsAdmin)
+            {
+                var view = new AdminDashboardForm();
+                var controller = new CoffeeWMS.Controllers.AdminDashboardController(view, new CoffeeWMS.Repositories.MasterDataRepository());
+                LoadView(view, "Admin Dashboard");
+            }
+            else
+            {
+                Panel p = new Panel();
+                
+                Label l = new Label();
+                l.Text = "Selamat datang di CoffeeWMS!";
+                l.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+                l.AutoSize = true;
+                l.Location = new Point(20, 20);
+                p.Controls.Add(l);
 
-            PrimaryButton btn = new PrimaryButton();
-            btn.Text = "Test Tombol Reusable";
-            btn.Location = new Point(20, 60);
-            btn.Width = 200;
-            p.Controls.Add(btn);
+                PrimaryButton btn = new PrimaryButton();
+                btn.Text = "Test Tombol Reusable";
+                btn.Location = new Point(20, 60);
+                btn.Width = 200;
+                p.Controls.Add(btn);
 
-            LoadView(p, "Dashboard");
+                LoadView(p, "Dashboard");
+            }
         }
 
         private void ShowPlaceholder(string module)
@@ -109,6 +120,13 @@ namespace CoffeeWMS.Views
             var umController = new CoffeeWMS.Controllers.UserManagementController(umView, new CoffeeWMS.Repositories.UserRepository());
             LoadView(umView, "Manajemen Pengguna");
             umView.TriggerLoad();
+        }
+
+        public void ShowDataManagement()
+        {
+            var view = new DataManagementForm();
+            var controller = new CoffeeWMS.Controllers.DataManagementController(view, new CoffeeWMS.Repositories.MasterDataRepository());
+            LoadView(view, "Manajemen Master Data");
         }
 
         public void CloseView()
