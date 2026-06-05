@@ -8,6 +8,7 @@ namespace CoffeeWMS.Views.Interfaces
     {
         event EventHandler LoadUsersRequested;
         event EventHandler<UserManagementEventArgs> SaveUserRequested;
+        event EventHandler<int> DeleteUserRequested;
 
         void DisplayUsers(object dataSource);
         void SetAvailableRoles(List<Role> roles);

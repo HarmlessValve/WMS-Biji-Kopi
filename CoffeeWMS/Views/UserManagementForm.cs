@@ -19,12 +19,21 @@ namespace CoffeeWMS.Views
 
         public event EventHandler LoadUsersRequested;
         public event EventHandler<UserManagementEventArgs> SaveUserRequested;
+        public event EventHandler<int> DeleteUserRequested;
 
         public UserManagementForm()
         {
             InitializeComponent();
             btnTambah.Click += (s, e) => ShowForm(0);
-            btnHapus.Click += (s, e) => Console.WriteLine("Hapus trigger");
+            btnHapus.Click += (s, e) => {
+                if (_editingUserId > 0)
+                {
+                    if (MessageBox.Show("Apakah Anda yakin ingin menghapus user ini?", "Konfirmasi Hapus", MessageBoxButtons.YesNo, MessageBoxIcon.Warning) == DialogResult.Yes)
+                    {
+                        DeleteUserRequested?.Invoke(this, _editingUserId);
+                    }
+                }
+            };
             btnBatal.Click += (s, e) => { pnlForm.Visible = false; };
         }
 

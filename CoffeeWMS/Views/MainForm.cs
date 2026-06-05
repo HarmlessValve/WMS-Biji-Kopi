@@ -23,7 +23,7 @@ namespace CoffeeWMS.Views
         private void InitializeMenus()
         {
             // Adding Menus to sidebar
-            int currentTop = 90; // Diturunkan agar tidak tertimpa panel Logo
+            int currentTop = 120; // Diturunkan agar tidak tertimpa panel Logo
             
             AddMenuItem("Dashboard", currentTop, ShowDashboard);
             currentTop += 40;

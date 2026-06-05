@@ -17,6 +17,22 @@ namespace CoffeeWMS.Controllers
 
             _view.LoadUsersRequested += OnLoadUsersRequested;
             _view.SaveUserRequested += OnSaveUserRequested;
+            _view.DeleteUserRequested += OnDeleteUserRequested;
+        }
+
+        private void OnDeleteUserRequested(object sender, int userId)
+        {
+            try
+            {
+                _repo.SoftDeleteUser(userId);
+                _view.ShowMessage("Berhasil dihapus!", false);
+                _view.CloseForm();
+                OnLoadUsersRequested(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                _view.ShowMessage("Gagal menghapus user: " + ex.Message, true);
+            }
         }
 
         private void OnLoadUsersRequested(object sender, EventArgs e)
@@ -42,9 +58,20 @@ namespace CoffeeWMS.Controllers
                 _view.ShowMessage("Username tidak boleh kosong!", true);
                 return;
             }
+            if (e.Username.Length < 8 || !e.Username.All(char.IsLetter))
+            {
+                _view.ShowMessage("Username minimal 8 karakter dan hanya boleh berisi huruf!", true);
+                return;
+            }
+
             if (e.UserId == 0 && string.IsNullOrWhiteSpace(e.Password))
             {
                 _view.ShowMessage("Password tidak boleh kosong untuk user baru!", true);
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(e.Password) && e.Password.Length < 8)
+            {
+                _view.ShowMessage("Password minimal 8 karakter!", true);
                 return;
             }
             if (e.SelectedRoleIds == null || !e.SelectedRoleIds.Any())

@@ -62,7 +62,7 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT user_id, username, is_active, created_at, roles_string FROM vw_user_roles ORDER BY username", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT user_id, username, is_active, created_at, roles_string FROM vw_user_roles WHERE is_active = true ORDER BY username", conn))
                     {
                         using (var reader = cmd.ExecuteReader())
                         {
@@ -157,6 +157,19 @@ namespace CoffeeWMS.Repositories
                     cmd.Parameters.AddWithValue("p", password ?? "");
                     cmd.Parameters.AddWithValue("a", isActive);
                     cmd.Parameters.AddWithValue("r", roleIds);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void SoftDeleteUser(int userId)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_user(@i)", conn))
+                {
+                    cmd.Parameters.AddWithValue("i", userId);
                     cmd.ExecuteNonQuery();
                 }
             }
