@@ -41,7 +41,7 @@ namespace CoffeeWMS.Views
             AddMenuItem("Laporan", currentTop, () => ShowPlaceholder("Laporan Transaksi"));
             
             // Logout
-            Button btnLogout = AddMenuItem("🚪 Logout", this.pnlSidebar.Height - 60, null);
+            Button btnLogout = AddMenuItem("Logout", this.pnlSidebar.Height - 60, null);
             btnLogout.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             btnLogout.Click += (s, e) => LogoutRequested?.Invoke(this, EventArgs.Empty);
         }
