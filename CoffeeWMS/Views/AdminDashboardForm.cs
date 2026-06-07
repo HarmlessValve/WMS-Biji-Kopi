@@ -32,8 +32,10 @@ namespace CoffeeWMS.Views
 
             // Left Side: Logs
             var pnlLogs = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var lblLogs = new Label { Text = "Log Aktivitas (vw_logs)", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
-            dgvLogs = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White };
+            var lblLogs = new Label { Text = "Log Aktivitas", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
+            dgvLogs = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, 
+                                        BackgroundColor = Color.White, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false 
+                                        };
             pnlLogs.Controls.Add(dgvLogs);
             pnlLogs.Controls.Add(lblLogs);
 
@@ -48,16 +50,20 @@ namespace CoffeeWMS.Views
             };
 
             var pnlSuppliers = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var lblSuppliers = new Label { Text = "Suppliers (vw_suppliers)", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
-            dgvSuppliers = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White };
+            var lblSuppliers = new Label { Text = "Suppliers", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
+            dgvSuppliers = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true,
+                                            AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false
+                                            };
             pnlSuppliers.Controls.Add(dgvSuppliers);
             pnlSuppliers.Controls.Add(lblSuppliers);
 
             splitRight.Panel1.Controls.Add(pnlSuppliers);
 
             var pnlDestinations = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var lblDestinations = new Label { Text = "Destinations (vw_destinations)", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
-            dgvDestinations = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White };
+            var lblDestinations = new Label { Text = "Destinations", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
+            dgvDestinations = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true,
+                                                AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false
+                                                };
             pnlDestinations.Controls.Add(dgvDestinations);
             pnlDestinations.Controls.Add(lblDestinations);
 

@@ -36,19 +36,19 @@ namespace CoffeeWMS.Views
 
             // Setup Left (Suppliers)
             var pnlSuppliers = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var lblSuppliers = new Label { Text = "Manajemen Suppliers", Dock = DockStyle.Top, Font = new Font("Segoe UI", 14, FontStyle.Bold), Height = 40 };
+            var lblSuppliers = new Label { Text = "Manajemen Supplier", Dock = DockStyle.Top, Font = new Font("Segoe UI", 14, FontStyle.Bold), Height = 40 };
             
             var pnlSupplierButtons = new Panel { Dock = DockStyle.Top, Height = 150 };
-            var txtSupplierName = new TextBox { PlaceholderText = "Nama Perusahaan", Location = new Point(10, 10), Width = 200 };
+            var txtSupplierName = new TextBox { PlaceholderText = "Nama Supplier", Location = new Point(10, 10), Width = 200 };
             var txtSupplierAddress = new TextBox { PlaceholderText = "Alamat", Location = new Point(10, 40), Width = 200 };
             var txtSupplierPhone = new TextBox { PlaceholderText = "Telepon", Location = new Point(10, 70), Width = 200 };
             
-            var btnAddSupplier = new Button { Text = "Tambah Supplier", Location = new Point(10, 100), Width = 120, BackColor = Color.LightGreen };
-            var btnDelSupplier = new Button { Text = "Hapus Supplier", Location = new Point(140, 100), Width = 120, BackColor = Color.LightPink };
+            var btnAddSupplier = new Button { Text = "Tambah Supplier", Location = new Point(10, 100),FlatStyle = FlatStyle.Flat, Width = 120, Height = 35, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White };
+            var btnDelSupplier = new Button { Text = "Hapus Supplier", Location = new Point(140, 100), FlatStyle = FlatStyle.Flat, Width = 120, Height = 35, BackColor = Color.FromArgb(222, 5, 0), ForeColor = Color.White };
             
             pnlSupplierButtons.Controls.AddRange(new Control[] { txtSupplierName, txtSupplierAddress, txtSupplierPhone, btnAddSupplier, btnDelSupplier });
             
-            dgvSuppliers = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
+            dgvSuppliers = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             pnlSuppliers.Controls.Add(dgvSuppliers);
             pnlSuppliers.Controls.Add(pnlSupplierButtons);
             pnlSuppliers.Controls.Add(lblSuppliers);
@@ -57,18 +57,18 @@ namespace CoffeeWMS.Views
 
             // Setup Right (Destinations)
             var pnlDest = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
-            var lblDest = new Label { Text = "Manajemen Destinations", Dock = DockStyle.Top, Font = new Font("Segoe UI", 14, FontStyle.Bold), Height = 40 };
+            var lblDest = new Label { Text = "Manajemen Destinasi", Dock = DockStyle.Top, Font = new Font("Segoe UI", 14, FontStyle.Bold), Height = 40 };
             
             var pnlDestButtons = new Panel { Dock = DockStyle.Top, Height = 150 };
             var txtDestName = new TextBox { PlaceholderText = "Nama Destinasi", Location = new Point(10, 10), Width = 200 };
             var txtDestAddress = new TextBox { PlaceholderText = "Alamat", Location = new Point(10, 40), Width = 200 };
             
-            var btnAddDest = new Button { Text = "Tambah Destinasi", Location = new Point(10, 100), Width = 120, BackColor = Color.LightGreen };
-            var btnDelDest = new Button { Text = "Hapus Destinasi", Location = new Point(140, 100), Width = 120, BackColor = Color.LightPink };
+            var btnAddDest = new Button { Text = "Tambah Destinasi", Location = new Point(10, 100), FlatStyle = FlatStyle.Flat, Width = 120, Height = 35, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White };
+            var btnDelDest = new Button { Text = "Hapus Destinasi", Location = new Point(140, 100), FlatStyle = FlatStyle.Flat, Width = 120, Height = 35, BackColor = Color.FromArgb(222, 5, 0), ForeColor = Color.White };
             
             pnlDestButtons.Controls.AddRange(new Control[] { txtDestName, txtDestAddress, btnAddDest, btnDelDest });
             
-            dgvDestinations = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, SelectionMode = DataGridViewSelectionMode.FullRowSelect };
+            dgvDestinations = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             pnlDest.Controls.Add(dgvDestinations);
             pnlDest.Controls.Add(pnlDestButtons);
             pnlDest.Controls.Add(lblDest);
