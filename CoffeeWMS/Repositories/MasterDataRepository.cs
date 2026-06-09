@@ -158,5 +158,67 @@ namespace CoffeeWMS.Repositories
                 }
             }
         }
+
+        // BAGIAN BARU: MASTER DATA KOPI
+       
+        public List<Coffee> GetCoffees()
+        {
+            var list = new List<Coffee>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, jenis_kopi, origin, type, is_active FROM vw_coffees ORDER BY jenis_kopi", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new Coffee
+                            {
+                                CoffeeId = reader.GetInt32(0),
+                                JenisKopi = reader.GetString(1),
+                                Origin = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                Type = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                IsActive = reader.GetBoolean(4)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetCoffees): " + ex.Message);
+            }
+            return list;
+        }
+
+        public void AddCoffee(Coffee coffee)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("INSERT INTO coffees (jenis_kopi, origin, type) VALUES (@j, @o, @t)", conn))
+                {
+                    cmd.Parameters.AddWithValue("j", coffee.JenisKopi);
+                    cmd.Parameters.AddWithValue("o", coffee.Origin ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("t", coffee.Type ?? (object)DBNull.Value);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void SoftDeleteCoffee(int id)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("UPDATE coffees SET is_active = false WHERE coffee_id = @id", conn))
+                {
+                    cmd.Parameters.AddWithValue("id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
     }
 }

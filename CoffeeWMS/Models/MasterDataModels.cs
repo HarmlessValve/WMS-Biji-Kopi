@@ -28,3 +28,25 @@ namespace CoffeeWMS.Models
         public DateTime LogTime { get; set; }
     }
 }
+
+public class TransaksiMasuk
+{
+    public int Id { get; set; }
+    public DateTime Tanggal { get; set; }
+    public string JenisKopi { get; set; }  // Contoh: Arabika, Robusta
+    public string Origin { get; set; }     // Contoh: Aceh, Toraja (Tambahan baru)
+    public string Type { get; set; }       // Contoh: Greenbean, Roasted (Tambahan baru)
+    public decimal JumlahKg { get; set; }
+}
+
+namespace CoffeeWMS.Models
+{
+    public class Coffee
+    {
+        public int CoffeeId { get; set; }
+        public string JenisKopi { get; set; }
+        public string Origin { get; set; }
+        public string Type { get; set; }
+        public bool IsActive { get; set; }
+    }
+}
