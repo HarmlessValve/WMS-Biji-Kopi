@@ -2,6 +2,7 @@ using System;
 
 namespace CoffeeWMS.Models
 {
+    // Sesuai tabel: suppliers
     public class Supplier
     {
         public int SupplierId { get; set; }
@@ -11,6 +12,7 @@ namespace CoffeeWMS.Models
         public bool IsActive { get; set; }
     }
 
+    // Sesuai tabel: destinations
     public class Destination
     {
         public int DestinationId { get; set; }
@@ -19,6 +21,7 @@ namespace CoffeeWMS.Models
         public bool IsActive { get; set; }
     }
 
+    // Sesuai view: vw_logs (join activity_logs + users)
     public class LogEntry
     {
         public int LogId { get; set; }
@@ -27,26 +30,45 @@ namespace CoffeeWMS.Models
         public string Description { get; set; }
         public DateTime LogTime { get; set; }
     }
-}
 
-public class TransaksiMasuk
-{
-    public int Id { get; set; }
-    public DateTime Tanggal { get; set; }
-    public string JenisKopi { get; set; }  // Contoh: Arabika, Robusta
-    public string Origin { get; set; }     // Contoh: Aceh, Toraja (Tambahan baru)
-    public string Type { get; set; }       // Contoh: Greenbean, Roasted (Tambahan baru)
-    public decimal JumlahKg { get; set; }
-}
-
-namespace CoffeeWMS.Models
-{
+    // Sesuai view: vw_coffee_types (join coffee_types + coffee_categories)
     public class Coffee
     {
         public int CoffeeId { get; set; }
-        public string JenisKopi { get; set; }
-        public string Origin { get; set; }
-        public string Type { get; set; }
+        public string CoffeeName { get; set; }
+        public int? CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public int MinimumStock { get; set; }
         public bool IsActive { get; set; }
+    }
+
+    // Sesuai tabel: coffee_categories
+    public class CoffeeCategory
+    {
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; }
+        public string Description { get; set; }
+    }
+
+    // Sesuai view: stock_summary
+    public class StockSummary
+    {
+        public int CoffeeId { get; set; }
+        public string CoffeeName { get; set; }
+        public string CategoryName { get; set; }
+        public int CurrentQuantity { get; set; }
+        public int MinimumStock { get; set; }
+        public string Status { get; set; } // "LOW" atau "SAFE"
+    }
+
+    // Sesuai view: vw_dashboard_summary
+    public class DashboardSummary
+    {
+        public int TotalCoffeeTypes { get; set; }
+        public int TotalSuppliers { get; set; }
+        public int TotalDestinations { get; set; }
+        public int TotalIncoming { get; set; }
+        public int TotalOutgoing { get; set; }
+        public int TotalLowStock { get; set; }
     }
 }
