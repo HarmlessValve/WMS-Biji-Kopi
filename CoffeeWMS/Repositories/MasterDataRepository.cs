@@ -158,5 +158,35 @@ namespace CoffeeWMS.Repositories
                 }
             }
         }
+
+        public List<CoffeeType> GetCoffeeTypes()
+        {
+            var list = new List<CoffeeType>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, is_active FROM coffee_types WHERE is_active = true ORDER BY coffee_name", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new CoffeeType
+                            {
+                                CoffeeId = reader.GetInt32(0),
+                                CoffeeName = reader.GetString(1),
+                                IsActive = reader.GetBoolean(2)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetCoffeeTypes): " + ex.Message);
+            }
+            return list;
+        }
     }
 }

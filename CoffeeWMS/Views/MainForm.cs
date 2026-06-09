@@ -36,7 +36,7 @@ namespace CoffeeWMS.Views
                 currentTop += 40;
             }
 
-            AddMenuItem("Penerimaan", currentTop, () => ShowPlaceholder("Input Penerimaan Kopi"));
+            AddMenuItem("Penerimaan", currentTop, ShowIncomingTransaction);
             currentTop += 40;
             AddMenuItem("Pengiriman", currentTop, () => ShowPlaceholder("Input Pengiriman Kopi"));
             currentTop += 40;
@@ -127,6 +127,14 @@ namespace CoffeeWMS.Views
             var view = new DataManagementForm();
             var controller = new CoffeeWMS.Controllers.DataManagementController(view, new CoffeeWMS.Repositories.MasterDataRepository());
             LoadView(view, "Manajemen Master Data");
+        }
+
+        public void ShowIncomingTransaction()
+        {
+            var view = new IncomingTransactionForm();
+            view.Dock = DockStyle.Fill;
+            var controller = new CoffeeWMS.Controllers.IncomingTransactionController(view);
+            LoadView(view, "Penerimaan Kopi");
         }
 
         public void CloseView()

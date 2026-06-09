@@ -19,6 +19,13 @@ namespace CoffeeWMS.Models
         public bool IsActive { get; set; }
     }
 
+    public class CoffeeType
+    {
+        public int CoffeeId { get; set; }
+        public string CoffeeName { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     public class LogEntry
     {
         public int LogId { get; set; }
