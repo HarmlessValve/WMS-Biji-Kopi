@@ -1,23 +1,67 @@
 -- ============================================================================
--- Protocol.sql — Unified Database Protocol for CoffeeWMS
--- Jalankan file ini SETELAH Structure DB.sql
--- ============================================================================
--- Isi:
---   Section 1: Trigger Functions
---   Section 2: Triggers
---   Section 3: Views
---   Section 4: Utility Functions
---   Section 5: Stored Procedures — User Management
---   Section 6: Stored Procedures — Master Data Management
---   Section 7: Stored Procedures — Transaksi
---   Section 8: Seed Data (Roles Awal)
+-- CLEANUP SCRIPT — Drop Protocol Objects for CoffeeWMS
+-- Jalankan file ini untuk membersihkan objek dari Protocol.sql
 -- ============================================================================
 
+-- ============================================================================
+-- SECTION 2: DROP TRIGGERS
+-- (Harus dihapus sebelum drop fungsi terkait)
+-- ============================================================================
+DROP TRIGGER IF EXISTS trg_incoming_update_stock ON incoming_transactions;
+DROP TRIGGER IF EXISTS trg_outgoing_update_stock ON outgoing_transactions;
+DROP TRIGGER IF EXISTS trg_log_incoming_transaction ON incoming_transactions;
+DROP TRIGGER IF EXISTS trg_log_outgoing_transaction ON outgoing_transactions;
 
 -- ============================================================================
--- SECTION 1: TRIGGER FUNCTIONS
--- Fungsi-fungsi yang dipanggil oleh trigger secara otomatis
+-- SECTION 1: DROP TRIGGER FUNCTIONS
 -- ============================================================================
+DROP FUNCTION IF EXISTS fn_update_stock_on_incoming();
+DROP FUNCTION IF EXISTS fn_update_stock_on_outgoing();
+DROP FUNCTION IF EXISTS fn_log_incoming_transaction();
+DROP FUNCTION IF EXISTS fn_log_outgoing_transaction();
+
+-- ============================================================================
+-- SECTION 3: DROP VIEWS
+-- ============================================================================
+DROP VIEW IF EXISTS vw_dashboard_summary;
+DROP VIEW IF EXISTS vw_outgoing_transactions;
+DROP VIEW IF EXISTS vw_incoming_transactions;
+DROP VIEW IF EXISTS vw_coffee_types;
+DROP VIEW IF EXISTS vw_destinations;
+DROP VIEW IF EXISTS vw_suppliers;
+DROP VIEW IF EXISTS vw_logs;
+DROP VIEW IF EXISTS stock_summary;
+DROP VIEW IF EXISTS vw_user_roles;
+
+-- ============================================================================
+-- SECTION 4: DROP UTILITY FUNCTIONS
+-- ============================================================================
+DROP FUNCTION IF EXISTS fn_get_stock_by_coffee(INT);
+DROP FUNCTION IF EXISTS fn_is_stock_sufficient(INT, INT);
+DROP FUNCTION IF EXISTS fn_get_low_stock_items();
+
+-- ============================================================================
+-- SECTION 5: DROP STORED PROCEDURES — USER MANAGEMENT
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_add_user(VARCHAR, VARCHAR, INT[]);
+DROP PROCEDURE IF EXISTS sp_update_user(INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
+DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT);
+
+-- ============================================================================
+-- SECTION 6: DROP STORED PROCEDURES — MASTER DATA MANAGEMENT
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_add_supplier(VARCHAR, TEXT, VARCHAR);
+DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT);
+DROP PROCEDURE IF EXISTS sp_add_destination(VARCHAR, TEXT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT);
+DROP PROCEDURE IF EXISTS sp_add_coffee_type(VARCHAR, INT, INT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT);
+
+-- ============================================================================
+-- SECTION 7: DROP STORED PROCEDURES — TRANSAKSI
+-- ============================================================================
+DROP PROCEDURE IF EXISTS sp_add_incoming_transaction(INT, INT, INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_outgoing_transaction(INT, INT, INT, INT);
 
 -- 1a. Fungsi: Update stok otomatis saat transaksi masuk (incoming)
 CREATE OR REPLACE FUNCTION fn_update_stock_on_incoming()
