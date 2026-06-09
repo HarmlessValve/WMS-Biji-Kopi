@@ -2,6 +2,7 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
+using CoffeeWMS.Models;
 using CoffeeWMS.Repositories;
 using Npgsql;
 using CoffeeWMS.Data;
@@ -89,7 +90,7 @@ namespace CoffeeWMS.Views
 
             int destinationId = (cmbDestinasi.SelectedValue as int?) ?? 0;
             int coffeeId = (cmbJenisKopi.SelectedValue as int?) ?? 0;
-            int petugasId = 1; // Sesuai data user log
+            int petugasId = Session.CurrentUser?.UserId ?? 1;
 
             if (destinationId == 0 || coffeeId == 0)
             {
