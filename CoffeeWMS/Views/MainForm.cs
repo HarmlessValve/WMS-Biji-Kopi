@@ -102,17 +102,21 @@ namespace CoffeeWMS.Views
             }
         }
 
-        private void ShowPlaceholder(string module)
-        {
-            Panel p = new Panel();
-            Label l = new Label();
-            l.Text = $"Modul {module} akan datang.";
-            l.Font = new Font("Segoe UI", 10F);
-            l.AutoSize = true;
-            l.Location = new Point(20, 20);
-            p.Controls.Add(l);
-            LoadView(p, module);
-        }
+private void ShowPlaceholder(string module)
+{
+    if (module == "Input Penerimaan Kopi")
+    {
+        LoadView(new PenerimaanView(), "Penerimaan Kopi");
+    }
+    else if (module == "Input Pengiriman Kopi")
+    {
+        LoadView(new PengirimanView(), "Pengiriman Kopi");
+    }
+    else if (module == "Laporan Transaksi")
+    {
+        LoadView(new LaporanView(), "Laporan Transaksi");
+    }
+}
 
         public void ShowUserManagement()
         {
