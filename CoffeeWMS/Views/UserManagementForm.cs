@@ -21,6 +21,8 @@ namespace CoffeeWMS.Views
         public event EventHandler<UserManagementEventArgs> SaveUserRequested;
         public event EventHandler<int> DeleteUserRequested;
 
+        public bool ShowInactive => chkShowInactive.Checked;
+
         public UserManagementForm()
         {
             InitializeComponent();
@@ -40,6 +42,11 @@ namespace CoffeeWMS.Views
         public void TriggerLoad()
         {
             LoadUsersRequested?.Invoke(this, EventArgs.Empty);
+        }
+
+        private void ChkShowInactive_CheckedChanged(object sender, EventArgs e)
+        {
+            TriggerLoad();
         }
 
         public void DisplayUsers(object dataSource)

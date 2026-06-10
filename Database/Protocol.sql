@@ -43,19 +43,19 @@ DROP FUNCTION IF EXISTS fn_get_low_stock_items();
 -- ============================================================================
 -- SECTION 5: DROP STORED PROCEDURES — USER MANAGEMENT
 -- ============================================================================
-DROP PROCEDURE IF EXISTS sp_add_user(VARCHAR, VARCHAR, INT[]);
-DROP PROCEDURE IF EXISTS sp_update_user(INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
-DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT);
+DROP PROCEDURE IF EXISTS sp_add_user(INT, VARCHAR, VARCHAR, INT[]);
+DROP PROCEDURE IF EXISTS sp_update_user(INT, INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
+DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT, INT);
 
 -- ============================================================================
 -- SECTION 6: DROP STORED PROCEDURES — MASTER DATA MANAGEMENT
 -- ============================================================================
-DROP PROCEDURE IF EXISTS sp_add_supplier(VARCHAR, TEXT, VARCHAR);
-DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT);
-DROP PROCEDURE IF EXISTS sp_add_destination(VARCHAR, TEXT);
-DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT);
-DROP PROCEDURE IF EXISTS sp_add_coffee_type(VARCHAR, INT, INT);
-DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT);
+DROP PROCEDURE IF EXISTS sp_add_supplier(INT, VARCHAR, TEXT, VARCHAR);
+DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_destination(INT, VARCHAR, TEXT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_coffee_type(INT, VARCHAR, INT, INT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT, INT);
 
 -- ============================================================================
 -- SECTION 7: DROP STORED PROCEDURES — TRANSAKSI
@@ -347,6 +347,7 @@ $$ LANGUAGE plpgsql;
 
 -- 5a. SP: Tambah Pengguna beserta Role-nya
 CREATE OR REPLACE PROCEDURE sp_add_user(
+    p_admin_id INT,
     p_username VARCHAR,
     p_password VARCHAR,
     p_roles_array INT[]
@@ -357,24 +358,27 @@ DECLARE
     new_user_id INT;
     r_id INT;
 BEGIN
+    -- Masukkan user baru dan ambil ID-nya
     INSERT INTO users (username, password, is_active)
     VALUES (p_username, p_password, true)
     RETURNING user_id INTO new_user_id;
 
+    -- Masukkan roles jika ada
     IF p_roles_array IS NOT NULL THEN
         FOREACH r_id IN ARRAY p_roles_array
         LOOP
             INSERT INTO user_roles (user_id, role_id) VALUES (new_user_id, r_id);
         END LOOP;
     END IF;
-    
+
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'CREATE_USER', 'Created user: ' || p_username);
+    VALUES (p_admin_id, 'CREATE_USER', 'Created user: ' || p_username);
 END;
 $$;
 
 -- 5b. SP: Update Pengguna dan Role-nya
 CREATE OR REPLACE PROCEDURE sp_update_user(
+    p_admin_id INT,
     p_user_id INT,
     p_username VARCHAR,
     p_password VARCHAR,
@@ -406,12 +410,13 @@ BEGIN
     END IF;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'UPDATE_USER', 'Updated user_id: ' || p_user_id);
+    VALUES (p_admin_id, 'UPDATE_USER', 'Updated user_id: ' || p_user_id);
 END;
 $$;
 
 -- 5c. SP: Soft Delete Pengguna (nonaktifkan)
 CREATE OR REPLACE PROCEDURE sp_soft_delete_user(
+    p_admin_id INT,
     p_user_id INT
 )
 LANGUAGE plpgsql
@@ -422,7 +427,7 @@ BEGIN
     WHERE user_id = p_user_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'SOFT_DELETE_USER', 'Deactivated user_id: ' || p_user_id);
+    VALUES (p_admin_id, 'SOFT_DELETE_USER', 'Deactivated user_id: ' || p_user_id);
 END;
 $$;
 
@@ -434,6 +439,7 @@ $$;
 
 -- 6a. SP: Tambah Supplier
 CREATE OR REPLACE PROCEDURE sp_add_supplier(
+    p_admin_id INT,
     p_company_name VARCHAR,
     p_address TEXT,
     p_phone VARCHAR
@@ -445,12 +451,13 @@ BEGIN
     VALUES (p_company_name, p_address, p_phone);
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'CREATE_SUPPLIER', 'Added supplier: ' || p_company_name);
+    VALUES (p_admin_id, 'CREATE_SUPPLIER', 'Added supplier: ' || p_company_name);
 END;
 $$;
 
 -- 6b. SP: Soft Delete Supplier
 CREATE OR REPLACE PROCEDURE sp_soft_delete_supplier(
+    p_admin_id INT,
     p_supplier_id INT
 )
 LANGUAGE plpgsql
@@ -459,12 +466,13 @@ BEGIN
     UPDATE suppliers SET is_active = FALSE WHERE supplier_id = p_supplier_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'SOFT_DELETE_SUPPLIER', 'Deactivated supplier_id: ' || p_supplier_id);
+    VALUES (p_admin_id, 'SOFT_DELETE_SUPPLIER', 'Deactivated supplier_id: ' || p_supplier_id);
 END;
 $$;
 
 -- 6c. SP: Tambah Destinasi
 CREATE OR REPLACE PROCEDURE sp_add_destination(
+    p_admin_id INT,
     p_destination_name VARCHAR,
     p_address TEXT
 )
@@ -475,12 +483,13 @@ BEGIN
     VALUES (p_destination_name, p_address);
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'CREATE_DESTINATION', 'Added destination: ' || p_destination_name);
+    VALUES (p_admin_id, 'CREATE_DESTINATION', 'Added destination: ' || p_destination_name);
 END;
 $$;
 
 -- 6d. SP: Soft Delete Destinasi
 CREATE OR REPLACE PROCEDURE sp_soft_delete_destination(
+    p_admin_id INT,
     p_destination_id INT
 )
 LANGUAGE plpgsql
@@ -489,12 +498,13 @@ BEGIN
     UPDATE destinations SET is_active = FALSE WHERE destination_id = p_destination_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'SOFT_DELETE_DESTINATION', 'Deactivated destination_id: ' || p_destination_id);
+    VALUES (p_admin_id, 'SOFT_DELETE_DESTINATION', 'Deactivated destination_id: ' || p_destination_id);
 END;
 $$;
 
 -- 6e. SP: Tambah Jenis Kopi
 CREATE OR REPLACE PROCEDURE sp_add_coffee_type(
+    p_admin_id INT,
     p_coffee_name VARCHAR,
     p_category_id INT,
     p_minimum_stock INT
@@ -506,12 +516,13 @@ BEGIN
     VALUES (p_coffee_name, p_category_id, COALESCE(p_minimum_stock, 20));
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'CREATE_COFFEE_TYPE', 'Added coffee type: ' || p_coffee_name);
+    VALUES (p_admin_id, 'CREATE_COFFEE_TYPE', 'Added coffee type: ' || p_coffee_name);
 END;
 $$;
 
 -- 6f. SP: Soft Delete Jenis Kopi
 CREATE OR REPLACE PROCEDURE sp_soft_delete_coffee_type(
+    p_admin_id INT,
     p_coffee_id INT
 )
 LANGUAGE plpgsql
@@ -520,7 +531,7 @@ BEGIN
     UPDATE coffee_types SET is_active = FALSE WHERE coffee_id = p_coffee_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (NULL, 'SOFT_DELETE_COFFEE_TYPE', 'Deactivated coffee_id: ' || p_coffee_id);
+    VALUES (p_admin_id, 'SOFT_DELETE_COFFEE_TYPE', 'Deactivated coffee_id: ' || p_coffee_id);
 END;
 $$;
 
@@ -607,3 +618,18 @@ INSERT INTO roles (role_name, description) VALUES ('Petugas', 'Petugas Input Dat
 INSERT INTO coffee_categories (category_name, description) VALUES ('Arabika', 'Kopi dataran tinggi, rasa lebih kompleks')  ON CONFLICT (category_name) DO NOTHING;
 INSERT INTO coffee_categories (category_name, description) VALUES ('Robusta', 'Kopi dataran rendah, rasa lebih kuat')      ON CONFLICT (category_name) DO NOTHING;
 INSERT INTO coffee_categories (category_name, description) VALUES ('Liberika', 'Kopi langka, aroma khas buah')             ON CONFLICT (category_name) DO NOTHING;
+
+-- 8c. Akun Admin Default & Mapping Role
+INSERT INTO users (username, password, is_active) 
+VALUES ('admin', 'admin123', true)
+ON CONFLICT (username) DO NOTHING;
+
+INSERT INTO user_roles (user_id, role_id)
+SELECT u.user_id, r.role_id 
+FROM users u, roles r 
+WHERE u.username = 'admin' AND r.role_name = 'Admin'
+ON CONFLICT (user_id, role_id) DO NOTHING;
+
+INSERT INTO activity_logs (user_id, action, description)
+SELECT user_id, 'SYSTEM_SEED', 'System generated initial Admin account'
+FROM users WHERE username = 'admin';

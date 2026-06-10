@@ -79,13 +79,14 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddSupplier(Supplier supplier)
+        public void AddSupplier(int adminId, Supplier supplier)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_supplier(@n, @a, @p)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_supplier(@admin_id, @n, @a, @p)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", supplier.CompanyName);
                     cmd.Parameters.AddWithValue("a", supplier.Address ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("p", supplier.Phone ?? (object)DBNull.Value);
@@ -94,13 +95,14 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteSupplier(int id)
+        public void SoftDeleteSupplier(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_supplier(@id)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_supplier(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
@@ -141,13 +143,14 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddDestination(Destination dest)
+        public void AddDestination(int adminId, Destination dest)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_destination(@n, @a)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_destination(@admin_id, @n, @a)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", dest.DestinationName);
                     cmd.Parameters.AddWithValue("a", dest.Address ?? (object)DBNull.Value);
                     cmd.ExecuteNonQuery();
@@ -155,13 +158,14 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteDestination(int id)
+        public void SoftDeleteDestination(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_destination(@id)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_destination(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
@@ -204,13 +208,14 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddCoffee(Coffee coffee)
+        public void AddCoffee(int adminId, Coffee coffee)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@n, @c, @m)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n, @c, @m)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", coffee.CoffeeName);
                     cmd.Parameters.AddWithValue("c", coffee.CategoryId.HasValue ? (object)coffee.CategoryId.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("m", coffee.MinimumStock);
@@ -219,13 +224,14 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteCoffee(int id)
+        public void SoftDeleteCoffee(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_coffee_type(@id)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_coffee_type(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
