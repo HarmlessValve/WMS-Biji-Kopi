@@ -27,6 +27,7 @@ namespace CoffeeWMS.Views
             this.pnlTop = new Panel();
             this.btnTambah = new PrimaryButton();
             this.btnHapus = new PrimaryButton();
+            this.chkShowInactive = new CheckBox();
             this.dgvUsers = new DataGridView();
             this.pnlForm = new Panel();
             this.lblTitle = new Label();
@@ -48,6 +49,7 @@ namespace CoffeeWMS.Views
             // 
             this.pnlTop.Controls.Add(this.btnTambah);
             this.pnlTop.Controls.Add(this.btnHapus);
+            this.pnlTop.Controls.Add(this.chkShowInactive);
             this.pnlTop.Dock = DockStyle.Top;
             this.pnlTop.Location = new Point(0, 0);
             this.pnlTop.Name = "pnlTop";
@@ -79,6 +81,17 @@ namespace CoffeeWMS.Views
             this.btnHapus.TabIndex = 1;
             this.btnHapus.Text = "Hapus Pengguna";
             this.btnHapus.UseVisualStyleBackColor = false;
+            // 
+            // chkShowInactive
+            // 
+            this.chkShowInactive.AutoSize = true;
+            this.chkShowInactive.Location = new Point(340, 18);
+            this.chkShowInactive.Name = "chkShowInactive";
+            this.chkShowInactive.Size = new Size(200, 23);
+            this.chkShowInactive.TabIndex = 2;
+            this.chkShowInactive.Text = "Tampilkan Pengguna Nonaktif";
+            this.chkShowInactive.UseVisualStyleBackColor = true;
+            this.chkShowInactive.CheckedChanged += new System.EventHandler(this.ChkShowInactive_CheckedChanged);
             // 
             // dgvUsers
             // 
@@ -263,5 +276,6 @@ namespace CoffeeWMS.Views
         private Label lblUser;
         private Label lblPass;
         private Label lblRoles;
+        private System.Windows.Forms.CheckBox chkShowInactive;
     }
 }

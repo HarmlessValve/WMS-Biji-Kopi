@@ -37,7 +37,8 @@ namespace CoffeeWMS.Controllers
             }
             try
             {
-                _repo.AddSupplier(e);
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                _repo.AddSupplier(adminId, e);
                 _view.ShowMessage("Supplier berhasil ditambahkan!");
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
@@ -51,7 +52,8 @@ namespace CoffeeWMS.Controllers
         {
             try
             {
-                _repo.SoftDeleteSupplier(supplierId);
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                _repo.SoftDeleteSupplier(adminId, supplierId);
                 _view.ShowMessage("Supplier berhasil dihapus!");
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
@@ -70,7 +72,8 @@ namespace CoffeeWMS.Controllers
             }
             try
             {
-                _repo.AddDestination(e);
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                _repo.AddDestination(adminId, e);
                 _view.ShowMessage("Destinasi berhasil ditambahkan!");
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
@@ -84,7 +87,8 @@ namespace CoffeeWMS.Controllers
         {
             try
             {
-                _repo.SoftDeleteDestination(destId);
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                _repo.SoftDeleteDestination(adminId, destId);
                 _view.ShowMessage("Destinasi berhasil dihapus!");
                 OnLoadDataRequested(this, EventArgs.Empty);
             }

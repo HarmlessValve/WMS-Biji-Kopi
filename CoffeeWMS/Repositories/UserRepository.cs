@@ -54,7 +54,7 @@ namespace CoffeeWMS.Repositories
             return null;
         }
 
-        public List<User> GetAllUsers()
+        public List<User> GetAllUsers(bool isActive = true)
         {
             var users = new List<User>();
             try
@@ -62,8 +62,9 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT user_id, username, is_active, created_at, roles_string FROM vw_user_roles WHERE is_active = true ORDER BY username", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT user_id, username, is_active, created_at, roles_string FROM vw_user_roles WHERE is_active = @isActive ORDER BY username", conn))
                     {
+                        cmd.Parameters.AddWithValue("isActive", isActive);
                         using (var reader = cmd.ExecuteReader())
                         {
                             while (reader.Read())
@@ -130,28 +131,31 @@ namespace CoffeeWMS.Repositories
             return roles;
         }
 
-        public void AddUser(string username, string password, int[] roleIds)
+        public void AddUser(int adminId, string username, string password, int[] roleIds)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_user(@u, @p, @r)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_user(@admin_id, @u, @p, @r)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("u", username);
                     cmd.Parameters.AddWithValue("p", password);
                     cmd.Parameters.AddWithValue("r", roleIds);
+
                     cmd.ExecuteNonQuery();
                 }
             }
         }
-
-        public void UpdateUser(int userId, string username, string password, bool isActive, int[] roleIds)
+        
+        public void UpdateUser(int adminId, int userId, string username, string password, bool isActive, int[] roleIds)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_update_user(@i, @u, @p, @a, @r)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_update_user(@admin_id, @i, @u, @p, @a, @r)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("i", userId);
                     cmd.Parameters.AddWithValue("u", username);
                     cmd.Parameters.AddWithValue("p", password ?? "");
@@ -162,13 +166,14 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteUser(int userId)
+        public void SoftDeleteUser(int adminId, int userId)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_user(@i)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_user(@admin_id, @i)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("i", userId);
                     cmd.ExecuteNonQuery();
                 }
