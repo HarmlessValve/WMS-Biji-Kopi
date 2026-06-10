@@ -108,3 +108,40 @@ namespace CoffeeWMS.Repositories
         }
     }
 }
+
+using System;
+using System.Data;
+using Npgsql; // Pastikan menggunakan library PostgreSQL yang sesuai dengan proyekmu
+using CoffeeWMS.Models; // Sesuaikan namespace-nya
+
+namespace CoffeeWMS.Repositories
+{
+    public class TransactionRepository
+    {
+        private readonly string _connectionString;
+
+        public TransactionRepository(string connectionString)
+        {
+            _connectionString = connectionString;
+        }
+
+        // Metode untuk mengeksekusi Stored Procedure Penerimaan
+        public void AddIncomingTransaction(int supplierId, int coffeeId, int quantity, int petugasId)
+        {
+            using (var conn = new NpgsqlConnection(_connectionString))
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_add_incoming_transaction(@supplier_id, @coffee_id, @quantity, @petugas_id)", conn))
+                {
+                    cmd.Parameters.AddWithValue("supplier_id", supplierId);
+                    cmd.Parameters.AddWithValue("coffee_id", coffeeId);
+                    cmd.Parameters.AddWithValue("quantity", quantity);
+                    cmd.Parameters.AddWithValue("petugas_id", petugasId);
+
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+        
+    }
+}
