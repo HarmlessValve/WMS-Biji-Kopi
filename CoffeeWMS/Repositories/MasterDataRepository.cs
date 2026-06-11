@@ -272,19 +272,32 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, string originName, int minimumStock, int initialStock)
+        public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, int originId, int minimumStock)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_product(@admin_id, @cf, @ct, @o, @m, @stk)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_product(@admin_id, @cf, @ct, @o, @m)", conn))
                 {
                     cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("cf", coffeeId);
                     cmd.Parameters.AddWithValue("ct", categoryId);
-                    cmd.Parameters.AddWithValue("o", originName);
+                    cmd.Parameters.AddWithValue("o", originId);
                     cmd.Parameters.AddWithValue("m", minimumStock);
-                    cmd.Parameters.AddWithValue("stk", initialStock);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void SoftDeleteCoffeeProduct(int adminId, int id)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_coffee_product(@admin_id, @id)", conn))
+                {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
+                    cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -319,6 +332,41 @@ namespace CoffeeWMS.Repositories
             catch (Exception ex)
             {
                 Console.WriteLine("DB Error (GetCoffeeCategories): " + ex.Message);
+            }
+            return list;
+        }
+
+        // ====================================================================
+        // COFFEE ORIGINS — langsung dari tabel coffee_origins
+        // ====================================================================
+        public List<CoffeeOrigin> GetCoffeeOrigins()
+        {
+            var list = new List<CoffeeOrigin>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT origin_id, origin_name, region, description, is_active FROM coffee_origins WHERE is_active = true ORDER BY origin_name", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new CoffeeOrigin
+                            {
+                                OriginId = reader.GetInt32(0),
+                                OriginName = reader.GetString(1),
+                                Region = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                Description = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                IsActive = reader.GetBoolean(4)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetCoffeeOrigins): " + ex.Message);
             }
             return list;
         }

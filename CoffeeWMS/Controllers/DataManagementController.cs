@@ -32,6 +32,7 @@ namespace CoffeeWMS.Controllers
             _view.DisplayCoffeeProducts(_repo.GetCoffeeProducts());
             _view.PopulateCoffeeTypes(_repo.GetCoffeeTypes());
             _view.PopulateCategories(_repo.GetCoffeeCategories());
+            _view.PopulateOrigins(_repo.GetCoffeeOrigins());
         }
 
         private void OnAddSupplierRequested(object sender, Supplier e)
@@ -104,23 +105,18 @@ namespace CoffeeWMS.Controllers
             }
         }
 
-        private void OnAddCoffeeProductRequested(object sender, (int coffeeId, int categoryId, string originName, int stock) data)
+        private void OnAddCoffeeProductRequested(object sender, (int coffeeId, int categoryId, int originId, int minimumStock) data)
         {
-            if (string.IsNullOrWhiteSpace(data.originName))
-            {
-                _view.ShowMessage("Nama Origin wajib diisi!", true);
-                return;
-            }
             try
             {
                 int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
-                _repo.AddCoffeeProduct(adminId, data.coffeeId, data.categoryId, data.originName, 20, data.stock);
+                _repo.AddCoffeeProduct(adminId, data.coffeeId, data.categoryId, data.originId, data.minimumStock);
                 _view.ShowMessage("Produk Kopi berhasil ditambahkan!");
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                _view.ShowMessage("Gagal menambah Produk Kopi: " + ex.Message, true);
+                _view.ShowMessage("Gagal menambah Produk Kopi: kemungkinan kombinasi sudah ada atau error lain. " + ex.Message, true);
             }
         }
 
@@ -129,10 +125,9 @@ namespace CoffeeWMS.Controllers
             try
             {
                 int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
-                // Asumsi repository punya SoftDeleteCoffeeProduct, atau menggunakan SoftDeleteCoffee biasa, tapi di sini db expect type/product.
-                // Jika tidak ada SoftDelete untuk product, panggil yg ada atau tangani exception.
-                // _repo.SoftDeleteCoffeeProduct(adminId, productId);
-                _view.ShowMessage("Fitur hapus Produk Kopi belum diimplementasikan di repository secara spesifik.");
+                _repo.SoftDeleteCoffeeProduct(adminId, productId);
+                _view.ShowMessage("Produk Kopi berhasil dihapus!");
+                OnLoadDataRequested(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {

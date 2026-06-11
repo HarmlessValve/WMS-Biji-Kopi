@@ -183,7 +183,7 @@ FROM coffee_products cp
 LEFT JOIN coffee_types ct      ON cp.coffee_id = ct.coffee_id
 LEFT JOIN coffee_categories cc ON cp.category_id = cc.category_id
 LEFT JOIN coffee_origins co    ON cp.origin_id = co.origin_id
-WHERE ct.is_active = true
+WHERE ct.is_active = true AND cp.is_active = true
 ORDER BY ct.coffee_name;
 
 -- 3g. View: Transaksi masuk (join supplier + kopi + petugas)
@@ -464,29 +464,36 @@ CREATE OR REPLACE PROCEDURE sp_add_coffee_product(
     p_admin_id INT,
     p_coffee_id INT,
     p_category_id INT,
-    p_origin_name VARCHAR,
-    p_minimum_stock INT,
-    p_initial_stock INT
+    p_origin_id INT,
+    p_minimum_stock INT
 )
 LANGUAGE plpgsql
 AS $$
 DECLARE
-    v_origin_id INT;
     v_product_id INT;
 BEGIN
-    -- Cari atau buat origin
-    SELECT origin_id INTO v_origin_id FROM coffee_origins WHERE origin_name ILIKE p_origin_name LIMIT 1;
-    IF v_origin_id IS NULL THEN
-        INSERT INTO coffee_origins (origin_name) VALUES (p_origin_name) RETURNING origin_id INTO v_origin_id;
-    END IF;
-
     -- Insert ke produk kopi
-    INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock, current_quantity)
-    VALUES (p_coffee_id, p_category_id, v_origin_id, COALESCE(p_minimum_stock, 20), COALESCE(p_initial_stock, 0))
+    INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock)
+    VALUES (p_coffee_id, p_category_id, p_origin_id, COALESCE(p_minimum_stock, 20))
     RETURNING product_id INTO v_product_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
     VALUES (p_admin_id, 'CREATE_COFFEE_PRODUCT', 'Added coffee product with product_id: ' || v_product_id);
+END;
+$$;
+
+-- 6h. SP: Soft Delete Produk Kopi
+CREATE OR REPLACE PROCEDURE sp_soft_delete_coffee_product(
+    p_admin_id INT,
+    p_product_id INT
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    UPDATE coffee_products SET is_active = FALSE WHERE product_id = p_product_id;
+    
+    INSERT INTO activity_logs (user_id, action, description) 
+    VALUES (p_admin_id, 'SOFT_DELETE_COFFEE_PRODUCT', 'Deactivated product_id: ' || p_product_id);
 END;
 $$;
 

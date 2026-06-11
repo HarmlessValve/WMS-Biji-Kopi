@@ -13,7 +13,7 @@ namespace CoffeeWMS.Views.Interfaces
         event EventHandler<Destination> AddDestinationRequested;
         event EventHandler<int> DeleteDestinationRequested;
 
-        event EventHandler<(int coffeeId, int categoryId, string originName, int stock)> AddCoffeeProductRequested;
+        event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock)> AddCoffeeProductRequested;
         event EventHandler<int> DeleteCoffeeProductRequested;
 
         void DisplaySuppliers(object dataSource);
@@ -22,6 +22,7 @@ namespace CoffeeWMS.Views.Interfaces
         
         void PopulateCoffeeTypes(object dataSource);
         void PopulateCategories(object dataSource);
+        void PopulateOrigins(object dataSource);
 
         void ShowMessage(string message, bool isError = false);
     }

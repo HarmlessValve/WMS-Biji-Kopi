@@ -13,13 +13,14 @@ namespace CoffeeWMS.Views
         private DataGridView dgvProducts;
         private ComboBox cmbCoffeeType;
         private ComboBox cmbCategory;
+        private ComboBox cmbOrigin;
 
         public event EventHandler LoadDataRequested;
         public event EventHandler<Supplier> AddSupplierRequested;
         public event EventHandler<int> DeleteSupplierRequested;
         public event EventHandler<Destination> AddDestinationRequested;
         public event EventHandler<int> DeleteDestinationRequested;
-        public event EventHandler<(int coffeeId, int categoryId, string originName, int stock)> AddCoffeeProductRequested;
+        public event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock)> AddCoffeeProductRequested;
         public event EventHandler<int> DeleteCoffeeProductRequested;
 
         public DataManagementForm()
@@ -79,14 +80,15 @@ namespace CoffeeWMS.Views
             
             cmbCoffeeType = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(10, 10), Width = 150 };
             cmbCategory = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(170, 10), Width = 150 };
-            var txtOrigin = new TextBox { PlaceholderText = "Asal/Origin Kopi", Location = new Point(330, 10), Width = 150 };
+            cmbOrigin = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(330, 10), Width = 150 };
             
-            var lblStock = new Label { Text = "Stok Awal:", Location = new Point(490, 12), AutoSize = true };
-            var numStock = new NumericUpDown { Location = new Point(570, 10), Width = 80, Maximum = 1000000 };
+            var lblStock = new Label { Text = "Minimum Stok:", Location = new Point(490, 12), AutoSize = true };
+            var numStock = new NumericUpDown { Location = new Point(590, 10), Width = 80, Maximum = 1000000 };
             
             var btnAddProduct = new Button { Text = "Tambah Produk", Location = new Point(10, 50), FlatStyle = FlatStyle.Flat, Width = 150, Height = 35, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White };
+            var btnDelProduct = new Button { Text = "Hapus Produk", Location = new Point(170, 50), FlatStyle = FlatStyle.Flat, Width = 150, Height = 35, BackColor = Color.FromArgb(222, 5, 0), ForeColor = Color.White };
             
-            pnlProdButtons.Controls.AddRange(new Control[] { cmbCoffeeType, cmbCategory, txtOrigin, lblStock, numStock, btnAddProduct });
+            pnlProdButtons.Controls.AddRange(new Control[] { cmbCoffeeType, cmbCategory, cmbOrigin, lblStock, numStock, btnAddProduct, btnDelProduct });
             dgvProducts = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             pnlProducts.Controls.Add(dgvProducts);
             pnlProducts.Controls.Add(pnlProdButtons);
@@ -137,13 +139,22 @@ namespace CoffeeWMS.Views
             };
 
             btnAddProduct.Click += (s, e) => {
-                if (cmbCoffeeType.SelectedValue == null || cmbCategory.SelectedValue == null) return;
+                if (cmbCoffeeType.SelectedValue == null || cmbCategory.SelectedValue == null || cmbOrigin.SelectedValue == null) return;
                 int cTypeId = (int)cmbCoffeeType.SelectedValue;
                 int catId = (int)cmbCategory.SelectedValue;
-                string origin = txtOrigin.Text;
+                int originId = (int)cmbOrigin.SelectedValue;
                 int stock = (int)numStock.Value;
-                AddCoffeeProductRequested?.Invoke(this, (cTypeId, catId, origin, stock));
-                txtOrigin.Clear(); numStock.Value = 0;
+                AddCoffeeProductRequested?.Invoke(this, (cTypeId, catId, originId, stock));
+                numStock.Value = 0;
+            };
+
+            btnDelProduct.Click += (s, e) => {
+                if (dgvProducts.SelectedRows.Count > 0)
+                {
+                    int id = (int)dgvProducts.SelectedRows[0].Cells["ProductId"].Value;
+                    if (MessageBox.Show("Yakin hapus produk ini?", "Hapus", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                        DeleteCoffeeProductRequested?.Invoke(this, id);
+                }
             };
         }
 
@@ -163,6 +174,13 @@ namespace CoffeeWMS.Views
             cmbCategory.DataSource = dataSource;
             cmbCategory.DisplayMember = "CategoryName";
             cmbCategory.ValueMember = "CategoryId";
+        }
+
+        public void PopulateOrigins(object dataSource)
+        {
+            cmbOrigin.DataSource = dataSource;
+            cmbOrigin.DisplayMember = "OriginName";
+            cmbOrigin.ValueMember = "OriginId";
         }
 
         public void ShowMessage(string message, bool isError = false)

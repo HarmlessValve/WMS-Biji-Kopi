@@ -61,6 +61,16 @@ namespace CoffeeWMS.Models
         public string Description { get; set; }
     }
 
+    // Sesuai tabel: coffee_origins
+    public class CoffeeOrigin
+    {
+        public int OriginId { get; set; }
+        public string OriginName { get; set; }
+        public string Region { get; set; }
+        public string Description { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     // Sesuai view: stock_summary
     public class StockSummary
     {

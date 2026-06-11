@@ -1,18 +1,3 @@
-DROP VIEW IF EXISTS stock_summary;
-DROP VIEW IF EXISTS vw_user_roles;
-DROP TABLE IF EXISTS activity_logs;
-DROP TABLE IF EXISTS outgoing_transactions;
-DROP TABLE IF EXISTS incoming_transactions;
-DROP TABLE IF EXISTS coffee_products;
-DROP TABLE IF EXISTS coffee_origins;
-DROP TABLE IF EXISTS user_roles;
-DROP TABLE IF EXISTS coffee_types;
-DROP TABLE IF EXISTS coffee_categories;
-DROP TABLE IF EXISTS roles;
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS destinations;
-DROP TABLE IF EXISTS suppliers;
-
 -- Tabel Roles 
 CREATE TABLE roles (
     role_id     SERIAL PRIMARY KEY,
@@ -85,7 +70,9 @@ CREATE TABLE coffee_products (
     origin_id        INT REFERENCES coffee_origins(origin_id) ON DELETE SET NULL,
     current_quantity INTEGER DEFAULT 0 CHECK (current_quantity >= 0),
     minimum_stock    INTEGER DEFAULT 20 CHECK (minimum_stock >= 0),
-    last_updated     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    last_updated     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    is_active        BOOLEAN DEFAULT TRUE,
+    UNIQUE (coffee_id, category_id, origin_id)
 );
 
 -- Tabel Transaksi Masuk
