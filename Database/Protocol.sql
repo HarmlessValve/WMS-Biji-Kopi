@@ -43,19 +43,19 @@ DROP FUNCTION IF EXISTS fn_get_low_stock_items();
 -- ============================================================================
 -- SECTION 5: DROP STORED PROCEDURES — USER MANAGEMENT
 -- ============================================================================
-DROP PROCEDURE IF EXISTS sp_add_user(INT, VARCHAR, VARCHAR, INT[]);
-DROP PROCEDURE IF EXISTS sp_update_user(INT, INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
-DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_user(VARCHAR, VARCHAR, INT[]);
+DROP PROCEDURE IF EXISTS sp_update_user(INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
+DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT);
 
 -- ============================================================================
 -- SECTION 6: DROP STORED PROCEDURES — MASTER DATA MANAGEMENT
 -- ============================================================================
-DROP PROCEDURE IF EXISTS sp_add_supplier(INT, VARCHAR, TEXT, VARCHAR);
-DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT, INT);
-DROP PROCEDURE IF EXISTS sp_add_destination(INT, VARCHAR, TEXT);
-DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT, INT);
-DROP PROCEDURE IF EXISTS sp_add_coffee_type(INT, VARCHAR, INT, INT);
-DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_supplier(VARCHAR, TEXT, VARCHAR);
+DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT);
+DROP PROCEDURE IF EXISTS sp_add_destination(VARCHAR, TEXT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT);
+DROP PROCEDURE IF EXISTS sp_add_coffee_type(VARCHAR, INT, INT);
+DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT);
 
 -- ============================================================================
 -- SECTION 7: DROP STORED PROCEDURES — TRANSAKSI
@@ -67,16 +67,11 @@ DROP PROCEDURE IF EXISTS sp_add_outgoing_transaction(INT, INT, INT, INT);
 CREATE OR REPLACE FUNCTION fn_update_stock_on_incoming()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Pastikan baris stok ada untuk coffee_id ini
-    INSERT INTO stock (coffee_id, current_quantity, last_updated)
-    VALUES (NEW.coffee_id, 0, CURRENT_TIMESTAMP)
-    ON CONFLICT (coffee_id) DO NOTHING;
-
-    -- Tambahkan quantity ke stok
-    UPDATE stock
+    -- Tambahkan quantity ke stok di coffee_products
+    UPDATE coffee_products
     SET current_quantity = current_quantity + NEW.quantity,
         last_updated     = CURRENT_TIMESTAMP
-    WHERE coffee_id = NEW.coffee_id;
+    WHERE product_id = NEW.product_id;
 
     RETURN NEW;
 END;
@@ -90,8 +85,8 @@ DECLARE
 BEGIN
     -- Ambil stok saat ini dengan row-level lock
     SELECT current_quantity INTO v_current
-    FROM stock
-    WHERE coffee_id = NEW.coffee_id
+    FROM coffee_products
+    WHERE product_id = NEW.product_id
     FOR UPDATE;
 
     -- Jika stok tidak cukup, batalkan transaksi
@@ -101,10 +96,10 @@ BEGIN
     END IF;
 
     -- Kurangi stok
-    UPDATE stock
+    UPDATE coffee_products
     SET current_quantity = current_quantity - NEW.quantity,
         last_updated     = CURRENT_TIMESTAMP
-    WHERE coffee_id = NEW.coffee_id;
+    WHERE product_id = NEW.product_id;
 
     RETURN NEW;
 END;
@@ -118,7 +113,7 @@ BEGIN
     VALUES (
         NEW.petugas_id,
         'INCOMING_STOCK',
-        'Auto-log: Penerimaan kopi ID ' || NEW.coffee_id || ' sebanyak ' || NEW.quantity || ' kg dari supplier ID ' || COALESCE(NEW.supplier_id::TEXT, 'N/A')
+        'Auto-log: Penerimaan produk ID ' || NEW.product_id || ' sebanyak ' || NEW.quantity || ' kg dari supplier ID ' || COALESCE(NEW.supplier_id::TEXT, 'N/A')
     );
     RETURN NEW;
 END;
@@ -132,7 +127,7 @@ BEGIN
     VALUES (
         NEW.petugas_id,
         'OUTGOING_STOCK',
-        'Auto-log: Pengiriman kopi ID ' || NEW.coffee_id || ' sebanyak ' || NEW.quantity || ' kg ke destinasi ID ' || COALESCE(NEW.destination_id::TEXT, 'N/A')
+        'Auto-log: Pengiriman produk ID ' || NEW.product_id || ' sebanyak ' || NEW.quantity || ' kg ke destinasi ID ' || COALESCE(NEW.destination_id::TEXT, 'N/A')
     );
     RETURN NEW;
 END;
@@ -183,21 +178,23 @@ LEFT JOIN user_roles ur ON u.user_id = ur.user_id
 LEFT JOIN roles r ON ur.role_id = r.role_id
 GROUP BY u.user_id, u.username, u.is_active, u.created_at;
 
--- 3b. View: Ringkasan stok per jenis kopi
+-- 3b. View: Ringkasan stok per produk kopi
 CREATE OR REPLACE VIEW stock_summary AS
 SELECT
-    ct.coffee_id,
+    cp.product_id,
     ct.coffee_name,
     cc.category_name,
-    COALESCE(s.current_quantity, 0)  AS current_quantity,
-    ct.minimum_stock,
+    co.origin_name,
+    COALESCE(cp.current_quantity, 0)  AS current_quantity,
+    cp.minimum_stock,
     CASE
-        WHEN COALESCE(s.current_quantity, 0) < ct.minimum_stock THEN 'LOW'
+        WHEN COALESCE(cp.current_quantity, 0) < cp.minimum_stock THEN 'LOW'
         ELSE 'SAFE'
     END AS status
-FROM coffee_types ct
-LEFT JOIN coffee_categories cc ON ct.category_id = cc.category_id
-LEFT JOIN stock s              ON ct.coffee_id   = s.coffee_id
+FROM coffee_products cp
+LEFT JOIN coffee_types ct      ON cp.coffee_id = ct.coffee_id
+LEFT JOIN coffee_categories cc ON cp.category_id = cc.category_id
+LEFT JOIN coffee_origins co    ON cp.origin_id = co.origin_id
 WHERE ct.is_active = TRUE;
 
 -- 3c. View: Log aktivitas (join ke username)
@@ -235,17 +232,21 @@ FROM destinations
 WHERE is_active = true
 ORDER BY destination_name;
 
--- 3f. View: Jenis kopi beserta kategori (untuk combobox & grid di aplikasi)
-CREATE OR REPLACE VIEW vw_coffee_types AS
+-- 3f. View: Produk kopi beserta kategori dan origin (untuk combobox & grid di aplikasi)
+CREATE OR REPLACE VIEW vw_coffee_products AS
 SELECT 
-    ct.coffee_id,
+    cp.product_id,
     ct.coffee_name,
-    ct.category_id,
+    cp.category_id,
     COALESCE(cc.category_name, 'Tanpa Kategori') AS category_name,
-    ct.minimum_stock,
+    cp.origin_id,
+    COALESCE(co.origin_name, 'Tanpa Origin') AS origin_name,
+    cp.minimum_stock,
     ct.is_active
-FROM coffee_types ct
-LEFT JOIN coffee_categories cc ON ct.category_id = cc.category_id
+FROM coffee_products cp
+LEFT JOIN coffee_types ct      ON cp.coffee_id = ct.coffee_id
+LEFT JOIN coffee_categories cc ON cp.category_id = cc.category_id
+LEFT JOIN coffee_origins co    ON cp.origin_id = co.origin_id
 WHERE ct.is_active = true
 ORDER BY ct.coffee_name;
 
@@ -259,9 +260,10 @@ SELECT
     t.quantity            AS jumlah,
     COALESCE(u.username, 'N/A')      AS petugas
 FROM incoming_transactions t
-LEFT JOIN suppliers s    ON t.supplier_id = s.supplier_id
-LEFT JOIN coffee_types c ON t.coffee_id   = c.coffee_id
-LEFT JOIN users u        ON t.petugas_id  = u.user_id
+LEFT JOIN suppliers s        ON t.supplier_id = s.supplier_id
+LEFT JOIN coffee_products cp ON t.product_id  = cp.product_id
+LEFT JOIN coffee_types c     ON cp.coffee_id  = c.coffee_id
+LEFT JOIN users u            ON t.petugas_id  = u.user_id
 ORDER BY t.received_at DESC;
 
 -- 3h. View: Transaksi keluar (join destinasi + kopi + petugas)
@@ -274,9 +276,10 @@ SELECT
     t.quantity             AS jumlah,
     COALESCE(u.username, 'N/A')         AS petugas
 FROM outgoing_transactions t
-LEFT JOIN destinations d ON t.destination_id = d.destination_id
-LEFT JOIN coffee_types c ON t.coffee_id      = c.coffee_id
-LEFT JOIN users u        ON t.petugas_id     = u.user_id
+LEFT JOIN destinations d     ON t.destination_id = d.destination_id
+LEFT JOIN coffee_products cp ON t.product_id     = cp.product_id
+LEFT JOIN coffee_types c     ON cp.coffee_id     = c.coffee_id
+LEFT JOIN users u            ON t.petugas_id     = u.user_id
 ORDER BY t.shipped_at DESC;
 
 -- 3i. View: Dashboard summary (statistik ringkasan)
@@ -295,32 +298,32 @@ SELECT
 -- Fungsi bantuan yang bisa dipanggil dari aplikasi atau SP lain
 -- ============================================================================
 
--- 4a. Fungsi: Ambil jumlah stok untuk coffee_id tertentu
-CREATE OR REPLACE FUNCTION fn_get_stock_by_coffee(p_coffee_id INT)
+-- 4a. Fungsi: Ambil jumlah stok untuk product_id tertentu
+CREATE OR REPLACE FUNCTION fn_get_stock_by_product(p_product_id INT)
 RETURNS INTEGER AS $$
 DECLARE
     v_qty INTEGER;
 BEGIN
     SELECT current_quantity INTO v_qty
-    FROM stock
-    WHERE coffee_id = p_coffee_id;
+    FROM coffee_products
+    WHERE product_id = p_product_id;
     
     RETURN COALESCE(v_qty, 0);
 END;
 $$ LANGUAGE plpgsql;
 
 -- 4b. Fungsi: Cek apakah stok cukup untuk pengiriman
-CREATE OR REPLACE FUNCTION fn_is_stock_sufficient(p_coffee_id INT, p_quantity INT)
+CREATE OR REPLACE FUNCTION fn_is_stock_sufficient(p_product_id INT, p_quantity INT)
 RETURNS BOOLEAN AS $$
 BEGIN
-    RETURN fn_get_stock_by_coffee(p_coffee_id) >= p_quantity;
+    RETURN fn_get_stock_by_product(p_product_id) >= p_quantity;
 END;
 $$ LANGUAGE plpgsql;
 
--- 4c. Fungsi: Ambil daftar item dengan stok rendah (di bawah minimum)
+-- 4c. Fungsi: Ambil daftar produk dengan stok rendah (di bawah minimum)
 CREATE OR REPLACE FUNCTION fn_get_low_stock_items()
 RETURNS TABLE (
-    coffee_id      INT,
+    product_id     INT,
     coffee_name    VARCHAR,
     current_qty    INT,
     minimum_stock  INT
@@ -328,14 +331,14 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT 
-        ct.coffee_id,
+        cp.product_id,
         ct.coffee_name,
-        COALESCE(s.current_quantity, 0) AS current_qty,
-        ct.minimum_stock
-    FROM coffee_types ct
-    LEFT JOIN stock s ON ct.coffee_id = s.coffee_id
+        COALESCE(cp.current_quantity, 0) AS current_qty,
+        cp.minimum_stock
+    FROM coffee_products cp
+    LEFT JOIN coffee_types ct ON cp.coffee_id = ct.coffee_id
     WHERE ct.is_active = true
-      AND COALESCE(s.current_quantity, 0) < ct.minimum_stock;
+      AND COALESCE(cp.current_quantity, 0) < cp.minimum_stock;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -347,7 +350,6 @@ $$ LANGUAGE plpgsql;
 
 -- 5a. SP: Tambah Pengguna beserta Role-nya
 CREATE OR REPLACE PROCEDURE sp_add_user(
-    p_admin_id INT,
     p_username VARCHAR,
     p_password VARCHAR,
     p_roles_array INT[]
@@ -358,27 +360,24 @@ DECLARE
     new_user_id INT;
     r_id INT;
 BEGIN
-    -- Masukkan user baru dan ambil ID-nya
     INSERT INTO users (username, password, is_active)
     VALUES (p_username, p_password, true)
     RETURNING user_id INTO new_user_id;
 
-    -- Masukkan roles jika ada
     IF p_roles_array IS NOT NULL THEN
         FOREACH r_id IN ARRAY p_roles_array
         LOOP
             INSERT INTO user_roles (user_id, role_id) VALUES (new_user_id, r_id);
         END LOOP;
     END IF;
-
+    
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'CREATE_USER', 'Created user: ' || p_username);
+    VALUES (NULL, 'CREATE_USER', 'Created user: ' || p_username);
 END;
 $$;
 
 -- 5b. SP: Update Pengguna dan Role-nya
 CREATE OR REPLACE PROCEDURE sp_update_user(
-    p_admin_id INT,
     p_user_id INT,
     p_username VARCHAR,
     p_password VARCHAR,
@@ -410,13 +409,12 @@ BEGIN
     END IF;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'UPDATE_USER', 'Updated user_id: ' || p_user_id);
+    VALUES (NULL, 'UPDATE_USER', 'Updated user_id: ' || p_user_id);
 END;
 $$;
 
 -- 5c. SP: Soft Delete Pengguna (nonaktifkan)
 CREATE OR REPLACE PROCEDURE sp_soft_delete_user(
-    p_admin_id INT,
     p_user_id INT
 )
 LANGUAGE plpgsql
@@ -427,7 +425,7 @@ BEGIN
     WHERE user_id = p_user_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'SOFT_DELETE_USER', 'Deactivated user_id: ' || p_user_id);
+    VALUES (NULL, 'SOFT_DELETE_USER', 'Deactivated user_id: ' || p_user_id);
 END;
 $$;
 
@@ -439,7 +437,6 @@ $$;
 
 -- 6a. SP: Tambah Supplier
 CREATE OR REPLACE PROCEDURE sp_add_supplier(
-    p_admin_id INT,
     p_company_name VARCHAR,
     p_address TEXT,
     p_phone VARCHAR
@@ -451,13 +448,12 @@ BEGIN
     VALUES (p_company_name, p_address, p_phone);
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'CREATE_SUPPLIER', 'Added supplier: ' || p_company_name);
+    VALUES (NULL, 'CREATE_SUPPLIER', 'Added supplier: ' || p_company_name);
 END;
 $$;
 
 -- 6b. SP: Soft Delete Supplier
 CREATE OR REPLACE PROCEDURE sp_soft_delete_supplier(
-    p_admin_id INT,
     p_supplier_id INT
 )
 LANGUAGE plpgsql
@@ -466,13 +462,12 @@ BEGIN
     UPDATE suppliers SET is_active = FALSE WHERE supplier_id = p_supplier_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'SOFT_DELETE_SUPPLIER', 'Deactivated supplier_id: ' || p_supplier_id);
+    VALUES (NULL, 'SOFT_DELETE_SUPPLIER', 'Deactivated supplier_id: ' || p_supplier_id);
 END;
 $$;
 
 -- 6c. SP: Tambah Destinasi
 CREATE OR REPLACE PROCEDURE sp_add_destination(
-    p_admin_id INT,
     p_destination_name VARCHAR,
     p_address TEXT
 )
@@ -483,13 +478,12 @@ BEGIN
     VALUES (p_destination_name, p_address);
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'CREATE_DESTINATION', 'Added destination: ' || p_destination_name);
+    VALUES (NULL, 'CREATE_DESTINATION', 'Added destination: ' || p_destination_name);
 END;
 $$;
 
 -- 6d. SP: Soft Delete Destinasi
 CREATE OR REPLACE PROCEDURE sp_soft_delete_destination(
-    p_admin_id INT,
     p_destination_id INT
 )
 LANGUAGE plpgsql
@@ -498,31 +492,45 @@ BEGIN
     UPDATE destinations SET is_active = FALSE WHERE destination_id = p_destination_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'SOFT_DELETE_DESTINATION', 'Deactivated destination_id: ' || p_destination_id);
+    VALUES (NULL, 'SOFT_DELETE_DESTINATION', 'Deactivated destination_id: ' || p_destination_id);
 END;
 $$;
 
 -- 6e. SP: Tambah Jenis Kopi
 CREATE OR REPLACE PROCEDURE sp_add_coffee_type(
-    p_admin_id INT,
-    p_coffee_name VARCHAR,
+    p_coffee_name VARCHAR
+)
+LANGUAGE plpgsql
+AS $$
+BEGIN
+    INSERT INTO coffee_types (coffee_name)
+    VALUES (p_coffee_name);
+    
+    INSERT INTO activity_logs (user_id, action, description) 
+    VALUES (NULL, 'CREATE_COFFEE_TYPE', 'Added coffee type: ' || p_coffee_name);
+END;
+$$;
+
+-- 6g. SP: Tambah Produk Kopi
+CREATE OR REPLACE PROCEDURE sp_add_coffee_product(
+    p_coffee_id INT,
     p_category_id INT,
+    p_origin_id INT,
     p_minimum_stock INT
 )
 LANGUAGE plpgsql
 AS $$
 BEGIN
-    INSERT INTO coffee_types (coffee_name, category_id, minimum_stock)
-    VALUES (p_coffee_name, p_category_id, COALESCE(p_minimum_stock, 20));
+    INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock)
+    VALUES (p_coffee_id, p_category_id, p_origin_id, COALESCE(p_minimum_stock, 20));
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'CREATE_COFFEE_TYPE', 'Added coffee type: ' || p_coffee_name);
+    VALUES (NULL, 'CREATE_COFFEE_PRODUCT', 'Added coffee product with coffee_id: ' || p_coffee_id);
 END;
 $$;
 
 -- 6f. SP: Soft Delete Jenis Kopi
 CREATE OR REPLACE PROCEDURE sp_soft_delete_coffee_type(
-    p_admin_id INT,
     p_coffee_id INT
 )
 LANGUAGE plpgsql
@@ -531,7 +539,7 @@ BEGIN
     UPDATE coffee_types SET is_active = FALSE WHERE coffee_id = p_coffee_id;
     
     INSERT INTO activity_logs (user_id, action, description) 
-    VALUES (p_admin_id, 'SOFT_DELETE_COFFEE_TYPE', 'Deactivated coffee_id: ' || p_coffee_id);
+    VALUES (NULL, 'SOFT_DELETE_COFFEE_TYPE', 'Deactivated coffee_id: ' || p_coffee_id);
 END;
 $$;
 
@@ -546,7 +554,7 @@ $$;
 -- Trigger trg_log_incoming_transaction akan otomatis mencatat log
 CREATE OR REPLACE PROCEDURE sp_add_incoming_transaction(
     p_supplier_id INT,
-    p_coffee_id INT,
+    p_product_id INT,
     p_quantity INT,
     p_petugas_id INT
 )
@@ -558,8 +566,8 @@ BEGIN
         RAISE EXCEPTION 'Error: Supplier dengan ID % tidak ditemukan atau tidak aktif.', p_supplier_id;
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM coffee_types WHERE coffee_id = p_coffee_id AND is_active = true) THEN
-        RAISE EXCEPTION 'Error: Jenis Kopi dengan ID % tidak ditemukan atau tidak aktif.', p_coffee_id;
+    IF NOT EXISTS (SELECT 1 FROM coffee_products WHERE product_id = p_product_id) THEN
+        RAISE EXCEPTION 'Error: Produk Kopi dengan ID % tidak ditemukan.', p_product_id;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM users WHERE user_id = p_petugas_id AND is_active = true) THEN
@@ -567,8 +575,8 @@ BEGIN
     END IF;
 
     -- Insert transaksi (trigger stok & log akan berjalan otomatis)
-    INSERT INTO incoming_transactions (supplier_id, coffee_id, quantity, petugas_id)
-    VALUES (p_supplier_id, p_coffee_id, p_quantity, p_petugas_id);
+    INSERT INTO incoming_transactions (supplier_id, product_id, quantity, petugas_id)
+    VALUES (p_supplier_id, p_product_id, p_quantity, p_petugas_id);
 END;
 $$;
 
@@ -577,7 +585,7 @@ $$;
 -- Trigger trg_log_outgoing_transaction akan otomatis mencatat log
 CREATE OR REPLACE PROCEDURE sp_add_outgoing_transaction(
     p_destination_id INT,
-    p_coffee_id INT,
+    p_product_id INT,
     p_quantity INT,
     p_petugas_id INT
 )
@@ -589,8 +597,8 @@ BEGIN
         RAISE EXCEPTION 'Error: Destinasi dengan ID % tidak ditemukan atau tidak aktif.', p_destination_id;
     END IF;
 
-    IF NOT EXISTS (SELECT 1 FROM coffee_types WHERE coffee_id = p_coffee_id AND is_active = true) THEN
-        RAISE EXCEPTION 'Error: Jenis Kopi dengan ID % tidak ditemukan atau tidak aktif.', p_coffee_id;
+    IF NOT EXISTS (SELECT 1 FROM coffee_products WHERE product_id = p_product_id) THEN
+        RAISE EXCEPTION 'Error: Produk Kopi dengan ID % tidak ditemukan.', p_product_id;
     END IF;
 
     IF NOT EXISTS (SELECT 1 FROM users WHERE user_id = p_petugas_id AND is_active = true) THEN
@@ -598,8 +606,8 @@ BEGIN
     END IF;
 
     -- Insert transaksi (trigger stok & log akan berjalan otomatis)
-    INSERT INTO outgoing_transactions (destination_id, coffee_id, quantity, petugas_id)
-    VALUES (p_destination_id, p_coffee_id, p_quantity, p_petugas_id);
+    INSERT INTO outgoing_transactions (destination_id, product_id, quantity, petugas_id)
+    VALUES (p_destination_id, p_product_id, p_quantity, p_petugas_id);
 END;
 $$;
 
@@ -633,3 +641,65 @@ ON CONFLICT (user_id, role_id) DO NOTHING;
 INSERT INTO activity_logs (user_id, action, description)
 SELECT user_id, 'SYSTEM_SEED', 'System generated initial Admin account'
 FROM users WHERE username = 'admin';
+
+-- 8c. Jenis kopi default (coffee_types)
+-- Karena tidak ada constraint unique pada coffee_name, kita tidak menggunakan ON CONFLICT secara sederhana, tapi untuk seeding awal bisa menggunakan INSERT biasa jika diasumsikan database baru.
+-- Sebagai pengamanan sederhana saat re-run, kita bersihkan dulu jika diperlukan, atau hanya jalankan saat kosong.
+-- Catatan: di production sebaiknya dicek eksistensi datanya.
+INSERT INTO coffee_types (coffee_name)
+SELECT 'Gayo' WHERE NOT EXISTS (SELECT 1 FROM coffee_types WHERE coffee_name = 'Gayo');
+INSERT INTO coffee_types (coffee_name)
+SELECT 'Toraja' WHERE NOT EXISTS (SELECT 1 FROM coffee_types WHERE coffee_name = 'Toraja');
+INSERT INTO coffee_types (coffee_name)
+SELECT 'Lampung' WHERE NOT EXISTS (SELECT 1 FROM coffee_types WHERE coffee_name = 'Lampung');
+
+-- 8d. Asal daerah default (coffee_origins)
+INSERT INTO coffee_origins (origin_name, region, description)
+SELECT 'Aceh Tengah', 'Sumatera', 'Dataran Tinggi Gayo' WHERE NOT EXISTS (SELECT 1 FROM coffee_origins WHERE origin_name = 'Aceh Tengah');
+INSERT INTO coffee_origins (origin_name, region, description)
+SELECT 'Tana Toraja', 'Sulawesi', 'Pegunungan Toraja' WHERE NOT EXISTS (SELECT 1 FROM coffee_origins WHERE origin_name = 'Tana Toraja');
+INSERT INTO coffee_origins (origin_name, region, description)
+SELECT 'Tanggamus', 'Sumatera', 'Dataran Rendah Lampung' WHERE NOT EXISTS (SELECT 1 FROM coffee_origins WHERE origin_name = 'Tanggamus');
+
+-- 8e. Produk kopi gabungan (coffee_products)
+-- Menghubungkan Gayo (Arabika) + Aceh Tengah
+INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock)
+SELECT 
+    (SELECT coffee_id FROM coffee_types WHERE coffee_name = 'Gayo' LIMIT 1),
+    (SELECT category_id FROM coffee_categories WHERE category_name = 'Arabika' LIMIT 1),
+    (SELECT origin_id FROM coffee_origins WHERE origin_name = 'Aceh Tengah' LIMIT 1),
+    20
+WHERE NOT EXISTS (
+    SELECT 1 FROM coffee_products cp 
+    JOIN coffee_types ct ON cp.coffee_id = ct.coffee_id 
+    JOIN coffee_origins co ON cp.origin_id = co.origin_id 
+    WHERE ct.coffee_name = 'Gayo' AND co.origin_name = 'Aceh Tengah'
+);
+
+-- Menghubungkan Toraja (Arabika) + Tana Toraja
+INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock)
+SELECT 
+    (SELECT coffee_id FROM coffee_types WHERE coffee_name = 'Toraja' LIMIT 1),
+    (SELECT category_id FROM coffee_categories WHERE category_name = 'Arabika' LIMIT 1),
+    (SELECT origin_id FROM coffee_origins WHERE origin_name = 'Tana Toraja' LIMIT 1),
+    15
+WHERE NOT EXISTS (
+    SELECT 1 FROM coffee_products cp 
+    JOIN coffee_types ct ON cp.coffee_id = ct.coffee_id 
+    JOIN coffee_origins co ON cp.origin_id = co.origin_id 
+    WHERE ct.coffee_name = 'Toraja' AND co.origin_name = 'Tana Toraja'
+);
+
+-- Menghubungkan Lampung (Robusta) + Tanggamus
+INSERT INTO coffee_products (coffee_id, category_id, origin_id, minimum_stock)
+SELECT 
+    (SELECT coffee_id FROM coffee_types WHERE coffee_name = 'Lampung' LIMIT 1),
+    (SELECT category_id FROM coffee_categories WHERE category_name = 'Robusta' LIMIT 1),
+    (SELECT origin_id FROM coffee_origins WHERE origin_name = 'Tanggamus' LIMIT 1),
+    30
+WHERE NOT EXISTS (
+    SELECT 1 FROM coffee_products cp 
+    JOIN coffee_types ct ON cp.coffee_id = ct.coffee_id 
+    JOIN coffee_origins co ON cp.origin_id = co.origin_id 
+    WHERE ct.coffee_name = 'Lampung' AND co.origin_name = 'Tanggamus'
+);

@@ -3,7 +3,7 @@ DROP VIEW IF EXISTS vw_user_roles;
 DROP TABLE IF EXISTS activity_logs;
 DROP TABLE IF EXISTS outgoing_transactions;
 DROP TABLE IF EXISTS incoming_transactions;
-DROP TABLE IF EXISTS stock;
+DROP TABLE IF EXISTS coffee_products;
 DROP TABLE IF EXISTS coffee_origins;
 DROP TABLE IF EXISTS user_roles;
 DROP TABLE IF EXISTS coffee_types;
@@ -57,15 +57,12 @@ CREATE TABLE coffee_categories (
 CREATE TABLE coffee_types (
     coffee_id     SERIAL PRIMARY KEY,
     coffee_name   VARCHAR(100) NOT NULL,
-    category_id   INT REFERENCES coffee_categories(category_id) ON DELETE SET NULL,
-    minimum_stock INTEGER DEFAULT 20 CHECK (minimum_stock >= 0),
     is_active     BOOLEAN DEFAULT TRUE
 );
 
 -- Tabel Coffee Origins (asal daerah kopi)
 CREATE TABLE coffee_origins (
     origin_id   SERIAL PRIMARY KEY,
-    coffee_id   INT NOT NULL REFERENCES coffee_types(coffee_id) ON DELETE CASCADE,
     origin_name VARCHAR(100) NOT NULL,
     region      VARCHAR(100),
     description TEXT,
@@ -80,11 +77,14 @@ CREATE TABLE destinations (
     is_active        BOOLEAN DEFAULT TRUE
 );
 
--- Tabel Stok
-CREATE TABLE stock (
-    stock_id         SERIAL PRIMARY KEY,
-    coffee_id        INT UNIQUE NOT NULL REFERENCES coffee_types(coffee_id) ON DELETE CASCADE,
+-- Tabel Coffee Products (Gabungan Master Kopi)
+CREATE TABLE coffee_products (
+    product_id       SERIAL PRIMARY KEY,
+    coffee_id        INT NOT NULL REFERENCES coffee_types(coffee_id) ON DELETE CASCADE,
+    category_id      INT REFERENCES coffee_categories(category_id) ON DELETE SET NULL,
+    origin_id        INT REFERENCES coffee_origins(origin_id) ON DELETE SET NULL,
     current_quantity INTEGER DEFAULT 0 CHECK (current_quantity >= 0),
+    minimum_stock    INTEGER DEFAULT 20 CHECK (minimum_stock >= 0),
     last_updated     TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -92,7 +92,7 @@ CREATE TABLE stock (
 CREATE TABLE incoming_transactions (
     incoming_id SERIAL PRIMARY KEY,
     supplier_id INT REFERENCES suppliers(supplier_id) ON DELETE SET NULL,
-    coffee_id   INT REFERENCES coffee_types(coffee_id) ON DELETE SET NULL,
+    product_id  INT REFERENCES coffee_products(product_id) ON DELETE SET NULL,
     quantity    INTEGER NOT NULL CHECK (quantity > 0),
     received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     petugas_id  INT REFERENCES users(user_id) ON DELETE SET NULL
@@ -102,7 +102,7 @@ CREATE TABLE incoming_transactions (
 CREATE TABLE outgoing_transactions (
     outgoing_id    SERIAL PRIMARY KEY,
     destination_id INT REFERENCES destinations(destination_id) ON DELETE SET NULL,
-    coffee_id      INT REFERENCES coffee_types(coffee_id) ON DELETE SET NULL,
+    product_id     INT REFERENCES coffee_products(product_id) ON DELETE SET NULL,
     quantity       INTEGER NOT NULL CHECK (quantity > 0),
     shipped_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     petugas_id     INT REFERENCES users(user_id) ON DELETE SET NULL
