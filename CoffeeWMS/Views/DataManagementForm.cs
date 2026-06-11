@@ -22,6 +22,7 @@ namespace CoffeeWMS.Views
         public event EventHandler<int> DeleteDestinationRequested;
         public event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock)> AddCoffeeProductRequested;
         public event EventHandler<int> DeleteCoffeeProductRequested;
+        public event EventHandler<CoffeeOrigin> AddCoffeeOriginRequested;
 
         public DataManagementForm()
         {

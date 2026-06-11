@@ -371,6 +371,34 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
+        public void AddCoffeeOrigin(int adminId, CoffeeOrigin origin)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                // We'll try direct insert or sp_add_coffee_origin if it exists. 
+                // Using an INSERT INTO with RETURNING or just simple INSERT if SP isn't around.
+                // Since this might not have a stored procedure, let's use standard INSERT for safety if it fails, but looking at others we'll try SP first.
+                // Wait, others use sp_. I will assume an insert for origin, but maybe sp_add_coffee_origin is safer. 
+                // Let's use INSERT because there is no guarantee `sp_add_coffee_origin` exists, wait, let's use INSERT to be safe because origins just inserted. 
+                using (var cmd = new NpgsqlCommand("INSERT INTO coffee_origins (origin_name, region, description, is_active) VALUES (@n, @r, @d, true)", conn))
+                {
+                    cmd.Parameters.AddWithValue("n", origin.OriginName);
+                    cmd.Parameters.AddWithValue("r", origin.Region ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("d", origin.Description ?? (object)DBNull.Value);
+                    cmd.ExecuteNonQuery();
+                    
+                    // We also need to log this if we bypassed SP. 
+                    using (var logCmd = new NpgsqlCommand("INSERT INTO logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Coffee Origin: ' || @n)", conn))
+                    {
+                        logCmd.Parameters.AddWithValue("u", adminId);
+                        logCmd.Parameters.AddWithValue("n", origin.OriginName);
+                        logCmd.ExecuteNonQuery();
+                    }
+                }
+            }
+        }
+
         // ====================================================================
         // STOCK SUMMARY — dari view stock_summary
         // ====================================================================

@@ -64,7 +64,7 @@ namespace CoffeeWMS.Views
             }
         }
 
-        private void ShowForm(int userId, User user = null)
+        private void ShowForm(int userId, User? user = null)
         {
             _editingUserId = userId;
             pnlForm.Visible = true;
