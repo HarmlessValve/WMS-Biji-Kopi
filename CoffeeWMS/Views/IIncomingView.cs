@@ -1,4 +1,5 @@
 using System;
+using System.Data; // Ditambahkan agar sistem mengenali 'DataTable'
 
 namespace CoffeeWMS.Views.Interfaces
 {
@@ -13,8 +14,9 @@ namespace CoffeeWMS.Views.Interfaces
         // Fungsi yang akan dipanggil oleh Controller untuk mengatur UI
         void ShowMessage(string message, bool isError = false);
         
-        // (Opsional nanti) void DisplayTransactions(DataTable data);
-        // (Opsional nanti) void PopulateSupplierCombobox(DataTable data);
-        // (Opsional nanti) void PopulateCoffeeCombobox(DataTable data);
+        // Tanda // telah dihapus agar bisa digunakan
+        void DisplayTransactions(DataTable data);
+        void PopulateSupplierCombobox(DataTable data);
+        void PopulateCoffeeCombobox(DataTable data);
     }
 }

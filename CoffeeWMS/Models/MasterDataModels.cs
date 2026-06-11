@@ -36,6 +36,7 @@ namespace CoffeeWMS.Models
     {
         public int CoffeeId { get; set; }
         public string CoffeeName { get; set; }
+        public string Origin { get; set; }
         public int? CategoryId { get; set; }
         public string CategoryName { get; set; }
         public int MinimumStock { get; set; }
@@ -45,7 +46,7 @@ namespace CoffeeWMS.Models
     // Sesuai tabel: coffee_categories
     public class CoffeeCategory
     {
-        public int CategoryId { get; set; }
+        public int CategoryId { get; set; } 
         public string CategoryName { get; set; }
         public string Description { get; set; }
     }

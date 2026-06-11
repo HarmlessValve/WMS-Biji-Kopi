@@ -109,11 +109,6 @@ namespace CoffeeWMS.Repositories
     }
 }
 
-using System;
-using System.Data;
-using Npgsql; // Pastikan menggunakan library PostgreSQL yang sesuai dengan proyekmu
-using CoffeeWMS.Models; // Sesuaikan namespace-nya
-
 namespace CoffeeWMS.Repositories
 {
     public class TransactionRepository

@@ -1,53 +1,73 @@
 using System;
-using CoffeeWMS.Models;
-using CoffeeWMS.Views.Interfaces;
+using System.Data;
+using Npgsql;
+using CoffeeWMS.Data;
 using CoffeeWMS.Repositories;
+using CoffeeWMS.Views.Interfaces;
 
 namespace CoffeeWMS.Controllers
 {
     public class IncomingController
     {
-        private readonly IIncomingView _view;
-        private readonly TransactionRepository _repo;
+        private TransaksiRepository _repo;
+        private IIncomingView _view;
 
-        public IncomingController(IIncomingView view, TransactionRepository repo)
+        // Controller menerima View lewat konstruktor
+        public IncomingController(IIncomingView view)
         {
+            _repo = new TransaksiRepository();
             _view = view;
-            _repo = repo;
 
-            // Mendaftarkan event dari View
+            // Berlangganan mendengarkan sinyal dari View
+            _view.LoadDataRequested += OnLoadDataRequested;
             _view.AddIncomingRequested += OnAddIncomingRequested;
         }
 
-        private void OnAddIncomingRequested(object sender, Tuple<int, int, int> e)
+        private void OnLoadDataRequested(object? sender, EventArgs e)
         {
-            int supplierId = e.Item1;
-            int coffeeId = e.Item2;
-            int quantity = e.Item3;
-
-            // Validasi dasar di Controller
-            if (quantity <= 0)
-            {
-                _view.ShowMessage("Jumlah (Kg) harus lebih dari 0!", true);
-                return;
-            }
-
+            // Saat sinyal memuat data ditekan, ambil dari DB lalu lemparkan ke View
             try
             {
-                // Mengambil ID User yang sedang login (seperti di DataManagementController)
-                int petugasId = Session.CurrentUser?.UserId ?? 1;
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    DataTable dtKopi = new DataTable();
+                    using (var da = new NpgsqlDataAdapter("SELECT coffee_id, coffee_name FROM coffee_types WHERE is_active = true", conn))
+                    { da.Fill(dtKopi); }
+                    _view.PopulateCoffeeCombobox(dtKopi);
 
-                // Memanggil Repository yang menjalankan prosedur PostgreSQL
-                _repo.AddIncomingTransaction(supplierId, coffeeId, quantity, petugasId);
-                
-                _view.ShowMessage("Data Penerimaan berhasil disimpan!");
-                
-                // Nanti bisa dipanggil event untuk me-refresh DataGridView di sini
+                    DataTable dtSupplier = new DataTable();
+                    using (var da = new NpgsqlDataAdapter("SELECT supplier_id, company_name FROM suppliers WHERE is_active = true", conn))
+                    { da.Fill(dtSupplier); }
+                    _view.PopulateSupplierCombobox(dtSupplier);
+                }
+
+                DataTable dtGrid = _repo.GetDataPenerimaan();
+                _view.DisplayTransactions(dtGrid);
             }
             catch (Exception ex)
             {
-                // Menangkap pesan error, termasuk error validasi dari PostgreSQL
-                _view.ShowMessage("Gagal menambah penerimaan: " + ex.Message, true);
+                _view.ShowMessage("Gagal memuat data master: " + ex.Message, true);
+            }
+        }
+
+        private void OnAddIncomingRequested(object? sender, Tuple<int, int, int> data)
+        {
+            // Ekstrak data dari Tuple: Item1 = SupplierId, Item2 = CoffeeId, Item3 = Jumlah
+            int petugasId = 1; // Asumsi ID Session sementara
+            
+            bool sukses = _repo.InsertPenerimaan(data.Item1, data.Item2, data.Item3, petugasId);
+            
+            if (sukses)
+            {
+                _view.ShowMessage("Data penerimaan kopi berhasil disimpan!", false);
+                
+                // Segarkan grid dengan meminta data terbaru dari Repository
+                DataTable dtGrid = _repo.GetDataPenerimaan();
+                _view.DisplayTransactions(dtGrid);
+            }
+            else
+            {
+                _view.ShowMessage("Gagal menyimpan data ke database.", true);
             }
         }
     }
