@@ -175,27 +175,24 @@ namespace CoffeeWMS.Repositories
         // ====================================================================
         // COFFEE TYPES — view vw_coffee_types + SP sp_add_coffee_type / sp_soft_delete_coffee_type
         // ====================================================================
-        public List<Coffee> GetCoffees()
+        public List<CoffeeType> GetCoffeeTypes()
         {
-            var list = new List<Coffee>();
+            var list = new List<CoffeeType>();
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, category_id, category_name, minimum_stock, is_active FROM vw_coffee_types ORDER BY coffee_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, is_active FROM coffee_types ORDER BY coffee_name", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
-                            list.Add(new Coffee
+                            list.Add(new CoffeeType
                             {
                                 CoffeeId = reader.GetInt32(0),
                                 CoffeeName = reader.GetString(1),
-                                CategoryId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
-                                CategoryName = reader.IsDBNull(3) ? "Tanpa Kategori" : reader.GetString(3),
-                                MinimumStock = reader.GetInt32(4),
-                                IsActive = reader.GetBoolean(5)
+                                IsActive = reader.GetBoolean(2)
                             });
                         }
                     }
@@ -203,22 +200,20 @@ namespace CoffeeWMS.Repositories
             }
             catch (Exception ex)
             {
-                Console.WriteLine("DB Error (GetCoffees): " + ex.Message);
+                Console.WriteLine("DB Error (GetCoffeeTypes): " + ex.Message);
             }
             return list;
         }
 
-        public void AddCoffee(int adminId, Coffee coffee)
+        public void AddCoffeeType(int adminId, CoffeeType coffee)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n, @c, @m)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n)", conn))
                 {
                     cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", coffee.CoffeeName);
-                    cmd.Parameters.AddWithValue("c", coffee.CategoryId.HasValue ? (object)coffee.CategoryId.Value : DBNull.Value);
-                    cmd.Parameters.AddWithValue("m", coffee.MinimumStock);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -233,6 +228,63 @@ namespace CoffeeWMS.Repositories
                 {
                     cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        // ====================================================================
+        // COFFEE PRODUCTS — view vw_coffee_products + SP sp_add_coffee_product
+        // ====================================================================
+        public List<CoffeeProduct> GetCoffeeProducts()
+        {
+            var list = new List<CoffeeProduct>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_id, category_name, origin_id, origin_name, current_quantity, minimum_stock, is_active FROM vw_coffee_products ORDER BY coffee_name", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new CoffeeProduct
+                            {
+                                ProductId = reader.GetInt32(0),
+                                CoffeeName = reader.GetString(1),
+                                CategoryId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
+                                CategoryName = reader.IsDBNull(3) ? "Tanpa Kategori" : reader.GetString(3),
+                                OriginId = reader.IsDBNull(4) ? (int?)null : reader.GetInt32(4),
+                                OriginName = reader.IsDBNull(5) ? "Tanpa Origin" : reader.GetString(5),
+                                CurrentQuantity = reader.GetInt32(6),
+                                MinimumStock = reader.GetInt32(7),
+                                IsActive = reader.GetBoolean(8)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetCoffeeProducts): " + ex.Message);
+            }
+            return list;
+        }
+
+        public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, string originName, int minimumStock, int initialStock)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_product(@admin_id, @cf, @ct, @o, @m, @stk)", conn))
+                {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
+                    cmd.Parameters.AddWithValue("cf", coffeeId);
+                    cmd.Parameters.AddWithValue("ct", categoryId);
+                    cmd.Parameters.AddWithValue("o", originName);
+                    cmd.Parameters.AddWithValue("m", minimumStock);
+                    cmd.Parameters.AddWithValue("stk", initialStock);
                     cmd.ExecuteNonQuery();
                 }
             }
@@ -282,19 +334,20 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, category_name, current_quantity, minimum_stock, status FROM stock_summary", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_name, origin_name, current_quantity, minimum_stock, status FROM stock_summary", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
                         {
                             list.Add(new StockSummary
                             {
-                                CoffeeId = reader.GetInt32(0),
+                                ProductId = reader.GetInt32(0),
                                 CoffeeName = reader.GetString(1),
                                 CategoryName = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                                CurrentQuantity = reader.GetInt32(3),
-                                MinimumStock = reader.GetInt32(4),
-                                Status = reader.GetString(5)
+                                OriginName = reader.IsDBNull(3) ? "" : reader.GetString(3),
+                                CurrentQuantity = reader.GetInt32(4),
+                                MinimumStock = reader.GetInt32(5),
+                                Status = reader.GetString(6)
                             });
                         }
                     }

@@ -11,17 +11,17 @@ namespace CoffeeWMS.Repositories
         // PENERIMAAN — menggunakan SP sp_add_incoming_transaction
         // Trigger akan otomatis: update stok + catat log
         // ====================================================================
-        public bool InsertPenerimaan(int supplierId, int coffeeId, int quantity, int petugasId)
+        public bool InsertPenerimaan(int supplierId, int productId, int quantity, int petugasId)
         {
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("CALL sp_add_incoming_transaction(@s, @c, @q, @p)", conn))
+                    using (var cmd = new NpgsqlCommand("CALL sp_add_incoming_transaction(@s, @p_id, @q, @p)", conn))
                     {
                         cmd.Parameters.AddWithValue("s", supplierId);
-                        cmd.Parameters.AddWithValue("c", coffeeId);
+                        cmd.Parameters.AddWithValue("p_id", productId);
                         cmd.Parameters.AddWithValue("q", quantity);
                         cmd.Parameters.AddWithValue("p", petugasId);
                         cmd.ExecuteNonQuery();
@@ -40,17 +40,17 @@ namespace CoffeeWMS.Repositories
         // PENGIRIMAN — menggunakan SP sp_add_outgoing_transaction
         // Trigger akan otomatis: cek stok, kurangi stok + catat log
         // ====================================================================
-        public bool InsertPengiriman(int destinationId, int coffeeId, int quantity, int petugasId)
+        public bool InsertPengiriman(int destinationId, int productId, int quantity, int petugasId)
         {
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("CALL sp_add_outgoing_transaction(@d, @c, @q, @p)", conn))
+                    using (var cmd = new NpgsqlCommand("CALL sp_add_outgoing_transaction(@d, @p_id, @q, @p)", conn))
                     {
                         cmd.Parameters.AddWithValue("d", destinationId);
-                        cmd.Parameters.AddWithValue("c", coffeeId);
+                        cmd.Parameters.AddWithValue("p_id", productId);
                         cmd.Parameters.AddWithValue("q", quantity);
                         cmd.Parameters.AddWithValue("p", petugasId);
                         cmd.ExecuteNonQuery();

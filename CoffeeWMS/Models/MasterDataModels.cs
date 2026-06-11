@@ -31,13 +31,24 @@ namespace CoffeeWMS.Models
         public DateTime LogTime { get; set; }
     }
 
-    // Sesuai view: vw_coffee_types (join coffee_types + coffee_categories)
-    public class Coffee
+    // Sesuai tabel: coffee_types
+    public class CoffeeType
     {
         public int CoffeeId { get; set; }
         public string CoffeeName { get; set; }
+        public bool IsActive { get; set; }
+    }
+
+    // Sesuai view: vw_coffee_products
+    public class CoffeeProduct
+    {
+        public int ProductId { get; set; }
+        public string CoffeeName { get; set; }
         public int? CategoryId { get; set; }
         public string CategoryName { get; set; }
+        public int? OriginId { get; set; }
+        public string OriginName { get; set; }
+        public int CurrentQuantity { get; set; }
         public int MinimumStock { get; set; }
         public bool IsActive { get; set; }
     }
@@ -53,9 +64,10 @@ namespace CoffeeWMS.Models
     // Sesuai view: stock_summary
     public class StockSummary
     {
-        public int CoffeeId { get; set; }
+        public int ProductId { get; set; }
         public string CoffeeName { get; set; }
         public string CategoryName { get; set; }
+        public string OriginName { get; set; }
         public int CurrentQuantity { get; set; }
         public int MinimumStock { get; set; }
         public string Status { get; set; } // "LOW" atau "SAFE"
