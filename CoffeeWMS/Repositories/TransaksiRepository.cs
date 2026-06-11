@@ -1,90 +1,109 @@
 using System;
 using System.Data;
 using Npgsql;
+using CoffeeWMS.Data;
 
 namespace CoffeeWMS.Repositories
 {
     public class TransaksiRepository
     {
-        // Silakan sesuaikan password database pgAdmin kamu di sini
-        private string connString = "Host=localhost;Username=postgres;Password=123;Database=WMS";
-
-        // 1. Simpan data Penerimaan
-        public bool InsertPenerimaan(DateTime tanggal, string supplier, string jenis, string noBatch, decimal jumlah)
+        // ====================================================================
+        // PENERIMAAN — menggunakan SP sp_add_incoming_transaction
+        // Trigger akan otomatis: update stok + catat log
+        // ====================================================================
+        public bool InsertPenerimaan(int supplierId, int coffeeId, int quantity, int petugasId)
         {
             try
             {
-                using (var conn = new NpgsqlConnection(connString))
+                using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    string query = @"INSERT INTO TransaksiMasuk (Tanggal, Supplier, JenisKopi, NoBatch, JumlahKg) 
-                                     VALUES (@tgl, @sup, @jenis, @batch, @jml)";
-                    using (var cmd = new NpgsqlCommand(query, conn))
+                    using (var cmd = new NpgsqlCommand("CALL sp_add_incoming_transaction(@s, @c, @q, @p)", conn))
                     {
-                        cmd.Parameters.AddWithValue("tgl", tanggal);
-                        cmd.Parameters.AddWithValue("sup", supplier);
-                        cmd.Parameters.AddWithValue("jenis", jenis);
-                        cmd.Parameters.AddWithValue("batch", noBatch);
-                        cmd.Parameters.AddWithValue("jml", jumlah);
-                        return cmd.ExecuteNonQuery() > 0;
+                        cmd.Parameters.AddWithValue("s", supplierId);
+                        cmd.Parameters.AddWithValue("c", coffeeId);
+                        cmd.Parameters.AddWithValue("q", quantity);
+                        cmd.Parameters.AddWithValue("p", petugasId);
+                        cmd.ExecuteNonQuery();
+                        return true;
                     }
                 }
             }
-            catch { return false; } // Mengembalikan false jika tabel/DB belum siap
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (InsertPenerimaan): " + ex.Message);
+                return false;
+            }
         }
 
-        // 2. Simpan data Pengiriman
-        public bool InsertPengiriman(DateTime tanggal, string customer, string jenis, decimal jumlah)
+        // ====================================================================
+        // PENGIRIMAN — menggunakan SP sp_add_outgoing_transaction
+        // Trigger akan otomatis: cek stok, kurangi stok + catat log
+        // ====================================================================
+        public bool InsertPengiriman(int destinationId, int coffeeId, int quantity, int petugasId)
         {
             try
             {
-                using (var conn = new NpgsqlConnection(connString))
+                using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    string query = @"INSERT INTO TransaksiKeluar (Tanggal, Customer, JenisKopi, JumlahKg) 
-                                     VALUES (@tgl, @cust, @jenis, @jml)";
-                    using (var cmd = new NpgsqlCommand(query, conn))
+                    using (var cmd = new NpgsqlCommand("CALL sp_add_outgoing_transaction(@d, @c, @q, @p)", conn))
                     {
-                        cmd.Parameters.AddWithValue("tgl", tanggal);
-                        cmd.Parameters.AddWithValue("cust", customer);
-                        cmd.Parameters.AddWithValue("jenis", jenis);
-                        cmd.Parameters.AddWithValue("jml", jumlah);
-                        return cmd.ExecuteNonQuery() > 0;
+                        cmd.Parameters.AddWithValue("d", destinationId);
+                        cmd.Parameters.AddWithValue("c", coffeeId);
+                        cmd.Parameters.AddWithValue("q", quantity);
+                        cmd.Parameters.AddWithValue("p", petugasId);
+                        cmd.ExecuteNonQuery();
+                        return true;
                     }
                 }
             }
-            catch { return false; }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (InsertPengiriman): " + ex.Message);
+                return false;
+            }
         }
 
-        // 3. Ambil data Penerimaan
+        // ====================================================================
+        // DATA PENERIMAAN — dari view vw_incoming_transactions
+        // ====================================================================
         public DataTable GetDataPenerimaan()
         {
             DataTable dt = new DataTable();
             try
             {
-                using (var conn = new NpgsqlConnection(connString))
+                using (var conn = DatabaseHelper.GetConnection())
                 {
-                    string query = "SELECT Tanggal, JenisKopi, JumlahKg FROM TransaksiMasuk ORDER BY Tanggal DESC";
+                    string query = "SELECT tanggal AS Tanggal, supplier AS Supplier, jenis_kopi AS JenisKopi, jumlah AS Jumlah, petugas AS Petugas FROM vw_incoming_transactions";
                     using (var da = new NpgsqlDataAdapter(query, conn)) { da.Fill(dt); }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetDataPenerimaan): " + ex.Message);
+            }
             return dt;
         }
 
-        // 4. Ambil data Pengiriman
+        // ====================================================================
+        // DATA PENGIRIMAN — dari view vw_outgoing_transactions
+        // ====================================================================
         public DataTable GetDataPengiriman()
         {
             DataTable dt = new DataTable();
             try
             {
-                using (var conn = new NpgsqlConnection(connString))
+                using (var conn = DatabaseHelper.GetConnection())
                 {
-                    string query = "SELECT Tanggal, JenisKopi, JumlahKg FROM TransaksiKeluar ORDER BY Tanggal DESC";
+                    string query = "SELECT tanggal AS Tanggal, destinasi AS Destinasi, jenis_kopi AS JenisKopi, jumlah AS Jumlah, petugas AS Petugas FROM vw_outgoing_transactions";
                     using (var da = new NpgsqlDataAdapter(query, conn)) { da.Fill(dt); }
                 }
             }
-            catch { }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetDataPengiriman): " + ex.Message);
+            }
             return dt;
         }
     }

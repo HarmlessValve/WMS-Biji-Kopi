@@ -24,7 +24,8 @@ namespace CoffeeWMS.Controllers
         {
             try
             {
-                _repo.SoftDeleteUser(userId);
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                _repo.SoftDeleteUser(adminId, userId);
                 _view.ShowMessage("Berhasil dihapus!", false);
                 _view.CloseForm();
                 OnLoadUsersRequested(this, EventArgs.Empty);
@@ -37,7 +38,7 @@ namespace CoffeeWMS.Controllers
 
         private void OnLoadUsersRequested(object sender, EventArgs e)
         {
-            var users = _repo.GetAllUsers();
+            var users = _repo.GetAllUsers(!_view.ShowInactive);
             
             var displayList = users.Select(u => new {
                 u.UserId,
@@ -84,12 +85,14 @@ namespace CoffeeWMS.Controllers
             {
                 if (e.UserId == 0)
                 {
-                    _repo.AddUser(e.Username, e.Password, e.SelectedRoleIds.ToArray());
+                    int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                    _repo.AddUser(adminId, e.Username, e.Password, e.SelectedRoleIds.ToArray());
                     _view.ShowMessage("Berhasil ditambahkan!", false);
                 }
                 else
                 {
-                    _repo.UpdateUser(e.UserId, e.Username, e.Password, e.IsActive, e.SelectedRoleIds.ToArray());
+                    int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                    _repo.UpdateUser(adminId, e.UserId, e.Username, e.Password, e.IsActive, e.SelectedRoleIds.ToArray());
                     _view.ShowMessage("Berhasil disimpan!", false);
                 }
 

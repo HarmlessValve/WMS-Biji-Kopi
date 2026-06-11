@@ -1,15 +1,19 @@
 using System;
+using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
+using CoffeeWMS.Models;
 using CoffeeWMS.Repositories;
+using Npgsql;
+using CoffeeWMS.Data;
 
 namespace CoffeeWMS.Views
 {
     public class PengirimanView : UserControl
     {
         private ComboBox cmbJenisKopi;
+        private ComboBox cmbDestinasi; // Mengubah TextBox menjadi ComboBox agar sesuai relasi ID
         private TextBox txtJumlah;
-        private TextBox txtCustomer;
         private Button btnSimpan;
         private DataGridView dgvPengiriman;
         private TransaksiRepository repo = new TransaksiRepository();
@@ -17,6 +21,7 @@ namespace CoffeeWMS.Views
         public PengirimanView()
         {
             BuildUI();
+            LoadComboBoxData(); // Mengisi data master dari DB
             RefreshGrid();
         }
 
@@ -29,11 +34,9 @@ namespace CoffeeWMS.Views
             
             Label lblJenis = new Label { Text = "Jenis Kopi:", Location = new Point(35, 70), AutoSize = true };
             cmbJenisKopi = new ComboBox { Location = new Point(35, 95), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
-            cmbJenisKopi.Items.AddRange(new string[] { "Arabika", "Robusta", "Liberika", "Excelsa" });
-            cmbJenisKopi.SelectedIndex = 0;
 
-            Label lblCustomer = new Label { Text = "Nama Customer / Tujuan:", Location = new Point(205, 70), AutoSize = true };
-            txtCustomer = new TextBox { Location = new Point(205, 95), Width = 150 };
+            Label lblDestinasi = new Label { Text = "Destinasi / Tujuan:", Location = new Point(205, 70), AutoSize = true };
+            cmbDestinasi = new ComboBox { Location = new Point(205, 95), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
 
             Label lblJumlah = new Label { Text = "Jumlah (Kg):", Location = new Point(375, 70), AutoSize = true };
             txtJumlah = new TextBox { Location = new Point(375, 95), Width = 100 };
@@ -43,44 +46,103 @@ namespace CoffeeWMS.Views
 
             dgvPengiriman = new DataGridView { Location = new Point(35, 185), Width = 600, Height = 250, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
 
-            this.Controls.AddRange(new Control[] { lblTitle, lblJenis, cmbJenisKopi, lblCustomer, txtCustomer, lblJumlah, txtJumlah, btnSimpan, dgvPengiriman });
+            this.Controls.AddRange(new Control[] { lblTitle, lblJenis, cmbJenisKopi, lblDestinasi, cmbDestinasi, lblJumlah, txtJumlah, btnSimpan, dgvPengiriman });
         }
 
-        private void BtnSimpan_Click(object sender, EventArgs e)
+        private void LoadComboBoxData()
         {
-            if (string.IsNullOrWhiteSpace(txtCustomer.Text) || !decimal.TryParse(txtJumlah.Text, out decimal jumlah) || jumlah <= 0)
+            try
             {
-                MessageBox.Show("Isi nama customer dan jumlah data dengan benar!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    // 1. Load Data Kopi
+                    string qKopi = "SELECT coffee_id, coffee_name FROM coffee_types WHERE is_active = true";
+                    DataTable dtKopi = new DataTable();
+                    using (var da = new NpgsqlDataAdapter(qKopi, conn)) { da.Fill(dtKopi); }
+                    
+                    cmbJenisKopi.DataSource = dtKopi;
+                    cmbJenisKopi.DisplayMember = "coffee_name";
+                    cmbJenisKopi.ValueMember = "coffee_id";
+
+                    // 2. Load Data Destinasi
+                    string qDest = "SELECT destination_id, destination_name FROM destinations WHERE is_active = true";
+                    DataTable dtDest = new DataTable();
+                    using (var da = new NpgsqlDataAdapter(qDest, conn)) { da.Fill(dtDest); }
+                    
+                    cmbDestinasi.DataSource = dtDest;
+                    cmbDestinasi.DisplayMember = "destination_name";
+                    cmbDestinasi.ValueMember = "destination_id";
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Gagal memuat data master ComboBox: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        private void BtnSimpan_Click(object? sender, EventArgs e)
+        {
+            if (!int.TryParse(txtJumlah.Text, out int jumlah) || jumlah <= 0)
+            {
+                MessageBox.Show("Isi jumlah data dengan benar (angka bulat > 0)!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            string jenis = cmbJenisKopi.SelectedItem.ToString();
-            bool sukses = repo.InsertPengiriman(DateTime.Now, txtCustomer.Text, jenis, jumlah);
+            int destinationId = (cmbDestinasi.SelectedValue as int?) ?? 0;
+            int coffeeId = (cmbJenisKopi.SelectedValue as int?) ?? 0;
+            int petugasId = Session.CurrentUser?.UserId ?? 1;
+
+            if (destinationId == 0 || coffeeId == 0)
+            {
+                MessageBox.Show("Data Destinasi atau Jenis Kopi belum valid!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                return;
+            }
+
+            // Eksekusi repository dengan tipe data integer (Sesuai modifikasi DB kemarin)
+            bool sukses = repo.InsertPengiriman(destinationId, coffeeId, jumlah, petugasId);
 
             if (sukses)
             {
                 MessageBox.Show("Pengiriman berhasil disimpan!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtJumlah.Clear(); txtCustomer.Clear();
+                txtJumlah.Clear();
                 RefreshGrid();
             }
             else
             {
                 MessageBox.Show("Koneksi DB gagal. Data dialihkan ke simulasi layar.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                dgvPengiriman.Rows.Add(DateTime.Now.ToString("yyyy-MM-dd HH:mm"), jenis, jumlah);
-                txtJumlah.Clear(); txtCustomer.Clear();
+                SimulasiLokal(cmbJenisKopi.Text ?? "Unknown", jumlah);
+                txtJumlah.Clear();
             }
         }
 
         private void RefreshGrid()
         {
             var dt = repo.GetDataPengiriman();
-            if (dt != null && dt.Rows.Count > 0) dgvPengiriman.DataSource = dt;
+            if (dt != null && dt.Rows.Count > 0) 
+            {
+                dgvPengiriman.DataSource = dt;
+            }
             else if (dgvPengiriman.Columns.Count == 0)
             {
                 dgvPengiriman.Columns.Add("Tanggal", "Tanggal");
+                dgvPengiriman.Columns.Add("Destinasi", "Destinasi");
                 dgvPengiriman.Columns.Add("JenisKopi", "Jenis Kopi");
                 dgvPengiriman.Columns.Add("Jumlah", "Jumlah (Kg)");
             }
+        }
+
+        private void SimulasiLokal(string jenis, int jumlah)
+        {
+            if (dgvPengiriman.DataSource != null)
+            {
+                dgvPengiriman.DataSource = null;
+                dgvPengiriman.Columns.Clear();
+                dgvPengiriman.Columns.Add("Tanggal", "Tanggal");
+                dgvPengiriman.Columns.Add("Destinasi", "Destinasi");
+                dgvPengiriman.Columns.Add("JenisKopi", "Jenis Kopi");
+                dgvPengiriman.Columns.Add("Jumlah", "Jumlah (Kg)");
+            }
+            dgvPengiriman.Rows.Add(DateTime.Now.ToString("yyyy-MM-dd HH:mm"), cmbDestinasi.Text, jenis, jumlah);
         }
     }
 }

@@ -8,6 +8,9 @@ namespace CoffeeWMS.Repositories
 {
     public class MasterDataRepository
     {
+        // ====================================================================
+        // LOGS — dari view vw_logs
+        // ====================================================================
         public List<LogEntry> GetLogs()
         {
             var logs = new List<LogEntry>();
@@ -41,6 +44,9 @@ namespace CoffeeWMS.Repositories
             return logs;
         }
 
+        // ====================================================================
+        // SUPPLIERS — view vw_suppliers + SP sp_add_supplier / sp_soft_delete_supplier
+        // ====================================================================
         public List<Supplier> GetSuppliers()
         {
             var list = new List<Supplier>();
@@ -73,13 +79,14 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddSupplier(Supplier supplier)
+        public void AddSupplier(int adminId, Supplier supplier)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("INSERT INTO suppliers (company_name, address, phone) VALUES (@n, @a, @p)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_supplier(@admin_id, @n, @a, @p)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", supplier.CompanyName);
                     cmd.Parameters.AddWithValue("a", supplier.Address ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("p", supplier.Phone ?? (object)DBNull.Value);
@@ -88,19 +95,23 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteSupplier(int id)
+        public void SoftDeleteSupplier(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE suppliers SET is_active = false WHERE supplier_id = @id", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_supplier(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
+        // ====================================================================
+        // DESTINATIONS — view vw_destinations + SP sp_add_destination / sp_soft_delete_destination
+        // ====================================================================
         public List<Destination> GetDestinations()
         {
             var list = new List<Destination>();
@@ -132,13 +143,14 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddDestination(Destination dest)
+        public void AddDestination(int adminId, Destination dest)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("INSERT INTO destinations (destination_name, address) VALUES (@n, @a)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_destination(@admin_id, @n, @a)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", dest.DestinationName);
                     cmd.Parameters.AddWithValue("a", dest.Address ?? (object)DBNull.Value);
                     cmd.ExecuteNonQuery();
@@ -146,21 +158,23 @@ namespace CoffeeWMS.Repositories
             }
         }
 
-        public void SoftDeleteDestination(int id)
+        public void SoftDeleteDestination(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE destinations SET is_active = false WHERE destination_id = @id", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_destination(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        // BAGIAN BARU: MASTER DATA KOPI
-       
+        // ====================================================================
+        // COFFEE TYPES — view vw_coffee_types + SP sp_add_coffee_type / sp_soft_delete_coffee_type
+        // ====================================================================
         public List<Coffee> GetCoffees()
         {
             var list = new List<Coffee>();
@@ -169,7 +183,7 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, jenis_kopi, origin, type, is_active FROM vw_coffees ORDER BY jenis_kopi", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, category_id, category_name, minimum_stock, is_active FROM vw_coffee_types ORDER BY coffee_name", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -177,10 +191,11 @@ namespace CoffeeWMS.Repositories
                             list.Add(new Coffee
                             {
                                 CoffeeId = reader.GetInt32(0),
-                                JenisKopi = reader.GetString(1),
-                                Origin = reader.IsDBNull(2) ? "" : reader.GetString(2),
-                                Type = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                                IsActive = reader.GetBoolean(4)
+                                CoffeeName = reader.GetString(1),
+                                CategoryId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
+                                CategoryName = reader.IsDBNull(3) ? "Tanpa Kategori" : reader.GetString(3),
+                                MinimumStock = reader.GetInt32(4),
+                                IsActive = reader.GetBoolean(5)
                             });
                         }
                     }
@@ -193,32 +208,138 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddCoffee(Coffee coffee)
+        public void AddCoffee(int adminId, Coffee coffee)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("INSERT INTO coffees (jenis_kopi, origin, type) VALUES (@j, @o, @t)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n, @c, @m)", conn))
                 {
-                    cmd.Parameters.AddWithValue("j", coffee.JenisKopi);
-                    cmd.Parameters.AddWithValue("o", coffee.Origin ?? (object)DBNull.Value);
-                    cmd.Parameters.AddWithValue("t", coffee.Type ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
+                    cmd.Parameters.AddWithValue("n", coffee.CoffeeName);
+                    cmd.Parameters.AddWithValue("c", coffee.CategoryId.HasValue ? (object)coffee.CategoryId.Value : DBNull.Value);
+                    cmd.Parameters.AddWithValue("m", coffee.MinimumStock);
                     cmd.ExecuteNonQuery();
                 }
             }
         }
 
-        public void SoftDeleteCoffee(int id)
+        public void SoftDeleteCoffee(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("UPDATE coffees SET is_active = false WHERE coffee_id = @id", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_soft_delete_coffee_type(@admin_id, @id)", conn))
                 {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("id", id);
                     cmd.ExecuteNonQuery();
                 }
             }
+        }
+
+        // ====================================================================
+        // COFFEE CATEGORIES — langsung dari tabel coffee_categories
+        // ====================================================================
+        public List<CoffeeCategory> GetCoffeeCategories()
+        {
+            var list = new List<CoffeeCategory>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT category_id, category_name, description FROM coffee_categories ORDER BY category_name", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new CoffeeCategory
+                            {
+                                CategoryId = reader.GetInt32(0),
+                                CategoryName = reader.GetString(1),
+                                Description = reader.IsDBNull(2) ? "" : reader.GetString(2)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetCoffeeCategories): " + ex.Message);
+            }
+            return list;
+        }
+
+        // ====================================================================
+        // STOCK SUMMARY — dari view stock_summary
+        // ====================================================================
+        public List<StockSummary> GetStockSummary()
+        {
+            var list = new List<StockSummary>();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, category_name, current_quantity, minimum_stock, status FROM stock_summary", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new StockSummary
+                            {
+                                CoffeeId = reader.GetInt32(0),
+                                CoffeeName = reader.GetString(1),
+                                CategoryName = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                CurrentQuantity = reader.GetInt32(3),
+                                MinimumStock = reader.GetInt32(4),
+                                Status = reader.GetString(5)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetStockSummary): " + ex.Message);
+            }
+            return list;
+        }
+
+        // ====================================================================
+        // DASHBOARD SUMMARY — dari view vw_dashboard_summary
+        // ====================================================================
+        public DashboardSummary GetDashboardSummary()
+        {
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+                    using (var cmd = new NpgsqlCommand("SELECT total_coffee_types, total_suppliers, total_destinations, total_incoming, total_outgoing, total_low_stock FROM vw_dashboard_summary", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            return new DashboardSummary
+                            {
+                                TotalCoffeeTypes = reader.GetInt32(0),
+                                TotalSuppliers = reader.GetInt32(1),
+                                TotalDestinations = reader.GetInt32(2),
+                                TotalIncoming = reader.GetInt32(3),
+                                TotalOutgoing = reader.GetInt32(4),
+                                TotalLowStock = reader.GetInt32(5)
+                            };
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetDashboardSummary): " + ex.Message);
+            }
+            return new DashboardSummary(); // Return default jika gagal
         }
     }
 }

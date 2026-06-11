@@ -10,6 +10,8 @@ namespace CoffeeWMS.Views.Interfaces
         event EventHandler<UserManagementEventArgs> SaveUserRequested;
         event EventHandler<int> DeleteUserRequested;
 
+        bool ShowInactive { get; }
+
         void DisplayUsers(object dataSource);
         void SetAvailableRoles(List<Role> roles);
         void ShowMessage(string message, bool isError = false);
