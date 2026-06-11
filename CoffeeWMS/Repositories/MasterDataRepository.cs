@@ -183,7 +183,7 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, category_id, category_name, minimum_stock, is_active FROM vw_coffee_types ORDER BY coffee_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, origin, category_id, category_name, minimum_stock, is_active FROM vw_coffee_types ORDER BY coffee_name", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -192,10 +192,11 @@ namespace CoffeeWMS.Repositories
                             {
                                 CoffeeId = reader.GetInt32(0),
                                 CoffeeName = reader.GetString(1),
-                                CategoryId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
-                                CategoryName = reader.IsDBNull(3) ? "Tanpa Kategori" : reader.GetString(3),
-                                MinimumStock = reader.GetInt32(4),
-                                IsActive = reader.GetBoolean(5)
+                                Origin = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                CategoryId = reader.IsDBNull(3) ? (int?)null : reader.GetInt32(3),
+                                CategoryName = reader.IsDBNull(4) ? "Tanpa Kategori" : reader.GetString(4),
+                                MinimumStock = reader.GetInt32(5),
+                                IsActive = reader.GetBoolean(6)
                             });
                         }
                     }
@@ -213,10 +214,11 @@ namespace CoffeeWMS.Repositories
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n, @c, @m)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_type(@admin_id, @n, @o, @c, @m)", conn))
                 {
                     cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", coffee.CoffeeName);
+                    cmd.Parameters.AddWithValue("o", coffee.Origin ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("c", coffee.CategoryId.HasValue ? (object)coffee.CategoryId.Value : DBNull.Value);
                     cmd.Parameters.AddWithValue("m", coffee.MinimumStock);
                     cmd.ExecuteNonQuery();

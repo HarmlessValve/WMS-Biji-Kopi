@@ -2,27 +2,35 @@ using System;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Models;
-using CoffeeWMS.Repositories;
-using Npgsql;
-using CoffeeWMS.Data;
+using CoffeeWMS.Controllers;
+using CoffeeWMS.Views.Interfaces; // Wajib ditambahkan untuk mengambil IIncomingView
 
 namespace CoffeeWMS.Views
 {
-    public class PenerimaanView : UserControl
+    // View sekarang mewarisi IIncomingView
+    public class PenerimaanView : UserControl, IIncomingView
     {
         private ComboBox cmbJenisKopi;
-        private ComboBox cmbSupplier; // Ditambahkan agar supplier tidak di-hardcode teks lagi
+        private ComboBox cmbSupplier;
         private TextBox txtJumlah;
         private Button btnSimpan;
         private DataGridView dgvPenerimaan;
-        private TransaksiRepository repo = new TransaksiRepository();
+
+        private IncomingController _controller;
+
+        // --- IMPLEMENTASI EVENT (Sinyal HT) ---
+        public event EventHandler? LoadDataRequested;
+        public event EventHandler<Tuple<int, int, int>>? AddIncomingRequested;
 
         public PenerimaanView()
         {
             BuildUI();
-            LoadComboBoxData(); // Mengisi data master dari DB ke ComboBox
-            RefreshGrid();
+            
+            // Controller dipasang dan View ini diserahkan kepadanya
+            _controller = new IncomingController(this); 
+            
+            // Tembakkan sinyal pertama agar Controller memuat data awal
+            LoadDataRequested?.Invoke(this, EventArgs.Empty);
         }
 
         private void BuildUI()
@@ -49,80 +57,32 @@ namespace CoffeeWMS.Views
             this.Controls.AddRange(new Control[] { lblTitle, lblSupplier, cmbSupplier, lblJenis, cmbJenisKopi, lblJumlah, txtJumlah, btnSimpan, dgvPenerimaan });
         }
 
-        private void LoadComboBoxData()
+        // --- IMPLEMENTASI FUNGSI DARI INTERFACE ---
+        public void ShowMessage(string message, bool isError = false)
         {
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    // 1. Load Data Kopi
-                    string qKopi = "SELECT coffee_id, coffee_name FROM coffee_types WHERE is_active = true";
-                    DataTable dtKopi = new DataTable();
-                    using (var da = new NpgsqlDataAdapter(qKopi, conn)) { da.Fill(dtKopi); }
-                    
-                    cmbJenisKopi.DataSource = dtKopi;
-                    cmbJenisKopi.DisplayMember = "coffee_name";
-                    cmbJenisKopi.ValueMember = "coffee_id";
-
-                    // 2. Load Data Supplier
-                    string qSupplier = "SELECT supplier_id, company_name FROM suppliers WHERE is_active = true";
-                    DataTable dtSupplier = new DataTable();
-                    using (var da = new NpgsqlDataAdapter(qSupplier, conn)) { da.Fill(dtSupplier); }
-                    
-                    cmbSupplier.DataSource = dtSupplier;
-                    cmbSupplier.DisplayMember = "company_name";
-                    cmbSupplier.ValueMember = "supplier_id";
-                }
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Gagal memuat data master ComboBox: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
+            MessageBoxIcon icon = isError ? MessageBoxIcon.Error : MessageBoxIcon.Information;
+            MessageBox.Show(message, isError ? "Error" : "Info", MessageBoxButtons.OK, icon);
         }
 
-        private void BtnSimpan_Click(object? sender, EventArgs e)
+        public void PopulateSupplierCombobox(DataTable data)
         {
-            // Validasi input angka bulat (int) sesuai tipe data db
-            if (!int.TryParse(txtJumlah.Text, out int jumlah) || jumlah <= 0)
-            {
-                MessageBox.Show("Masukkan jumlah yang valid (angka bulat di atas 0)!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Ambil ID (ValueMember) bukan Teks bebas
-            int supplierId = (cmbSupplier.SelectedValue as int?) ?? 0;
-            int coffeeId = (cmbJenisKopi.SelectedValue as int?) ?? 0;
-            int petugasId = Session.CurrentUser?.UserId ?? 1;
-
-            if (supplierId == 0 || coffeeId == 0)
-            {
-                MessageBox.Show("Data Supplier atau Jenis Kopi belum dipilih dengan benar!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return;
-            }
-
-            // Kirim 4 argumen int sesuai dengan repository baru
-            bool sukses = repo.InsertPenerimaan(supplierId, coffeeId, jumlah, petugasId);
-
-            if (sukses)
-            {
-                MessageBox.Show("Data penerimaan kopi berhasil disimpan ke Database!", "Sukses", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                txtJumlah.Clear();
-                RefreshGrid();
-            }
-            else
-            {
-                MessageBox.Show("Koneksi DB gagal/Tabel belum siap. Data dialihkan ke simulasi layar.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                SimulasiLokal(cmbJenisKopi.Text ?? "Unknown", jumlah);
-                txtJumlah.Clear();
-            }
+            cmbSupplier.DataSource = data;
+            cmbSupplier.DisplayMember = "company_name";
+            cmbSupplier.ValueMember = "supplier_id";
         }
 
-        private void RefreshGrid()
+        public void PopulateCoffeeCombobox(DataTable data)
         {
-            DataTable dt = repo.GetDataPenerimaan();
-            if (dt != null && dt.Rows.Count > 0)
+            cmbJenisKopi.DataSource = data;
+            cmbJenisKopi.DisplayMember = "coffee_name";
+            cmbJenisKopi.ValueMember = "coffee_id";
+        }
+
+        public void DisplayTransactions(DataTable data)
+        {
+            if (data != null && data.Rows.Count > 0)
             {
-                dgvPenerimaan.DataSource = dt;
+                dgvPenerimaan.DataSource = data;
             }
             else if (dgvPenerimaan.Columns.Count == 0)
             {
@@ -133,18 +93,28 @@ namespace CoffeeWMS.Views
             }
         }
 
-        private void SimulasiLokal(string jenis, int jumlah)
+        // --- EVENT HANDLER TOMBOL UI ---
+        private void BtnSimpan_Click(object? sender, EventArgs e)
         {
-            if (dgvPenerimaan.DataSource != null)
+            if (!int.TryParse(txtJumlah.Text, out int jumlah) || jumlah <= 0)
             {
-                dgvPenerimaan.DataSource = null;
-                dgvPenerimaan.Columns.Clear();
-                dgvPenerimaan.Columns.Add("Tanggal", "Tanggal");
-                dgvPenerimaan.Columns.Add("Supplier", "Supplier");
-                dgvPenerimaan.Columns.Add("JenisKopi", "Jenis Kopi");
-                dgvPenerimaan.Columns.Add("Jumlah", "Jumlah (Kg)");
+                ShowMessage("Masukkan jumlah yang valid (angka bulat di atas 0)!", true);
+                return;
             }
-            dgvPenerimaan.Rows.Add(DateTime.Now.ToString("yyyy-MM-dd HH:mm"), cmbSupplier.Text, jenis, jumlah);
+
+            int supplierId = (cmbSupplier.SelectedValue as int?) ?? 0;
+            int coffeeId = (cmbJenisKopi.SelectedValue as int?) ?? 0;
+
+            if (supplierId == 0 || coffeeId == 0)
+            {
+                ShowMessage("Data Supplier atau Jenis Kopi belum dipilih dengan benar!", true);
+                return;
+            }
+
+            // Memicu event untuk mengirim Tuple (SupplierId, CoffeeId, Jumlah) ke Controller
+            AddIncomingRequested?.Invoke(this, new Tuple<int, int, int>(supplierId, coffeeId, jumlah));
+            
+            txtJumlah.Clear();
         }
     }
 }

@@ -13,8 +13,17 @@ namespace CoffeeWMS.Views.Interfaces
         event EventHandler<Destination> AddDestinationRequested;
         event EventHandler<int> DeleteDestinationRequested;
 
+        // --- DIREVISI: Mengirim objek Coffee (Bukan sekadar string) ---
+        event EventHandler<Coffee> AddCoffeeRequested;
+        event EventHandler<int> DeleteCoffeeRequested;
+
         void DisplaySuppliers(object dataSource);
         void DisplayDestinations(object dataSource);
+        
+        // --- DIREVISI: Menampilkan data kopi dan kategori ---
+        void DisplayCoffeeTypes(object dataSource);
+        void DisplayCoffeeCategories(object dataSource); // Untuk Combobox Kategori
+        
         void ShowMessage(string message, bool isError = false);
     }
 }
