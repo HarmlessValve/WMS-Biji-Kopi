@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Npgsql;
@@ -18,10 +18,10 @@ namespace CoffeeWMS.Controllers
 
             _view.LoadDataRequested += OnLoadDataRequested;
 
-            _view.AddSupplierRequested += OnAddSupplierRequested;
+            _view.SaveSupplierRequested += OnSaveSupplierRequested;
             _view.DeleteSupplierRequested += OnDeleteSupplierRequested;
 
-            _view.AddDestinationRequested += OnAddDestinationRequested;
+            _view.SaveDestinationRequested += OnSaveDestinationRequested;
             _view.DeleteDestinationRequested += OnDeleteDestinationRequested;
 
             _view.AddCoffeeProductRequested += OnAddCoffeeProductRequested;
@@ -32,8 +32,8 @@ namespace CoffeeWMS.Controllers
 
         private void OnLoadDataRequested(object sender, EventArgs e)
         {
-            _view.DisplaySuppliers(GetSuppliers());
-            _view.DisplayDestinations(GetDestinations());
+            _view.DisplaySuppliers(GetSuppliers(_view.ShowInactiveSupplier));
+            _view.DisplayDestinations(GetDestinations(_view.ShowInactiveDestination));
             _view.DisplayCoffeeProducts(GetCoffeeProducts());
 
             _view.PopulateCoffeeTypes(GetCoffeeTypes());
@@ -42,7 +42,7 @@ namespace CoffeeWMS.Controllers
             _view.PopulateRoastLevels(GetRoastLevels());
         }
 
-        private void OnAddSupplierRequested(object sender, Supplier e)
+        private void OnSaveSupplierRequested(object sender, Supplier e)
         {
             if (string.IsNullOrWhiteSpace(e.CompanyName))
             {
@@ -53,13 +53,21 @@ namespace CoffeeWMS.Controllers
             try
             {
                 int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
-                AddSupplier(adminId, e);
-                _view.ShowMessage("Supplier berhasil ditambahkan!");
+                if (e.SupplierId == 0)
+                {
+                    AddSupplier(adminId, e);
+                    _view.ShowMessage("Supplier berhasil ditambahkan!");
+                }
+                else
+                {
+                    UpdateSupplier(adminId, e);
+                    _view.ShowMessage("Supplier berhasil diupdate!");
+                }
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                _view.ShowMessage("Gagal menambah Supplier: " + ex.Message, true);
+                _view.ShowMessage("Gagal menyimpan Supplier: " + ex.Message, true);
             }
         }
 
@@ -78,7 +86,7 @@ namespace CoffeeWMS.Controllers
             }
         }
 
-        private void OnAddDestinationRequested(object sender, Destination e)
+        private void OnSaveDestinationRequested(object sender, Destination e)
         {
             if (string.IsNullOrWhiteSpace(e.DestinationName))
             {
@@ -89,13 +97,21 @@ namespace CoffeeWMS.Controllers
             try
             {
                 int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
-                AddDestination(adminId, e);
-                _view.ShowMessage("Destinasi berhasil ditambahkan!");
+                if (e.DestinationId == 0)
+                {
+                    AddDestination(adminId, e);
+                    _view.ShowMessage("Destinasi berhasil ditambahkan!");
+                }
+                else
+                {
+                    UpdateDestination(adminId, e);
+                    _view.ShowMessage("Destinasi berhasil diupdate!");
+                }
                 OnLoadDataRequested(this, EventArgs.Empty);
             }
             catch (Exception ex)
             {
-                _view.ShowMessage("Gagal menambah Destinasi: " + ex.Message, true);
+                _view.ShowMessage("Gagal menyimpan Destinasi: " + ex.Message, true);
             }
         }
 
@@ -166,7 +182,7 @@ namespace CoffeeWMS.Controllers
         }
 
         // --- Database Logic ---
-        public List<Supplier> GetSuppliers()
+        public List<Supplier> GetSuppliers(bool showInactive = false)
         {
             var list = new List<Supplier>();
             try
@@ -174,7 +190,9 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT supplier_id, company_name, address, phone, is_active FROM vw_suppliers ORDER BY company_name", conn))
+                    string filter = showInactive ? "WHERE is_active = false" : "WHERE is_active = true";
+                    string query = $"SELECT supplier_id, company_name, address, phone, is_active FROM vw_suppliers {filter} ORDER BY company_name";
+                    using (var cmd = new NpgsqlCommand(query, conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -211,6 +229,24 @@ namespace CoffeeWMS.Controllers
             }
         }
 
+        public void UpdateSupplier(int adminId, Supplier supplier)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_update_supplier(@admin_id, @id, @n, @a, @p, @is_active)", conn))
+                {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
+                    cmd.Parameters.AddWithValue("id", supplier.SupplierId);
+                    cmd.Parameters.AddWithValue("n", supplier.CompanyName);
+                    cmd.Parameters.AddWithValue("a", supplier.Address ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("p", supplier.Phone ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("is_active", supplier.IsActive);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
         public void SoftDeleteSupplier(int adminId, int id)
         {
             using (var conn = DatabaseHelper.GetConnection())
@@ -225,7 +261,7 @@ namespace CoffeeWMS.Controllers
             }
         }
 
-        public List<Destination> GetDestinations()
+        public List<Destination> GetDestinations(bool showInactive = false)
         {
             var list = new List<Destination>();
             try
@@ -233,7 +269,9 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT destination_id, destination_name, address, is_active FROM vw_destinations ORDER BY destination_name", conn))
+                    string filter = showInactive ? "WHERE is_active = false" : "WHERE is_active = true";
+                    string query = $"SELECT destination_id, destination_name, address, is_active FROM vw_destinations {filter} ORDER BY destination_name";
+                    using (var cmd = new NpgsqlCommand(query, conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -263,6 +301,23 @@ namespace CoffeeWMS.Controllers
                     cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("n", dest.DestinationName);
                     cmd.Parameters.AddWithValue("a", dest.Address ?? (object)DBNull.Value);
+                    cmd.ExecuteNonQuery();
+                }
+            }
+        }
+
+        public void UpdateDestination(int adminId, Destination dest)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand("CALL sp_update_destination(@admin_id, @id, @n, @a, @is_active)", conn))
+                {
+                    cmd.Parameters.AddWithValue("admin_id", adminId);
+                    cmd.Parameters.AddWithValue("id", dest.DestinationId);
+                    cmd.Parameters.AddWithValue("n", dest.DestinationName);
+                    cmd.Parameters.AddWithValue("a", dest.Address ?? (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("is_active", dest.IsActive);
                     cmd.ExecuteNonQuery();
                 }
             }

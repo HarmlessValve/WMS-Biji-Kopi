@@ -27,8 +27,10 @@ DROP PROCEDURE IF EXISTS sp_add_user(INT, VARCHAR, VARCHAR, INT[]);
 DROP PROCEDURE IF EXISTS sp_update_user(INT, INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
 DROP PROCEDURE IF EXISTS sp_soft_delete_user(INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_supplier(INT, VARCHAR, TEXT, VARCHAR);
+DROP PROCEDURE IF EXISTS sp_update_supplier(INT, INT, VARCHAR, TEXT, VARCHAR, BOOLEAN);
 DROP PROCEDURE IF EXISTS sp_soft_delete_supplier(INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_destination(INT, VARCHAR, TEXT);
+DROP PROCEDURE IF EXISTS sp_update_destination(INT, INT, VARCHAR, TEXT, BOOLEAN);
 DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_coffee_type(INT, VARCHAR);
 DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT, INT);
@@ -170,7 +172,8 @@ CREATE TABLE incoming_transactions (
     product_id  INT REFERENCES coffee_products(product_id) ON DELETE SET NULL,
     quantity    INTEGER NOT NULL CHECK (quantity > 0),
     received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    petugas_id  INT REFERENCES users(user_id)              ON DELETE SET NULL
+    petugas_id  INT REFERENCES users(user_id)              ON DELETE SET NULL,
+    is_active   BOOLEAN DEFAULT true
 );
 
 -- 1.12 Transaksi Keluar
@@ -180,7 +183,8 @@ CREATE TABLE outgoing_transactions (
     product_id     INT REFERENCES coffee_products(product_id)     ON DELETE SET NULL,
     quantity       INTEGER NOT NULL CHECK (quantity > 0),
     shipped_at     TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    petugas_id     INT REFERENCES users(user_id)                  ON DELETE SET NULL
+    petugas_id     INT REFERENCES users(user_id)                  ON DELETE SET NULL,
+    is_active   BOOLEAN DEFAULT true
 );
 
 -- 1.13 Log Aktivitas
@@ -236,10 +240,7 @@ INSERT INTO coffee_types (coffee_id, coffee_name, is_active) VALUES
     (1, 'Arabika',  true),
     (2, 'Robusta',  true),
     (3, 'Liberika', true),
-    (4, 'Excelsa',  true),
-    (5, 'Gayo',     true),
-    (6, 'Toraja',   true),
-    (7, 'Lampung',  true)
+    (4, 'Excelsa',  true)
 ON CONFLICT (coffee_id) DO UPDATE SET
     coffee_name = EXCLUDED.coffee_name,
     is_active   = EXCLUDED.is_active;
@@ -277,49 +278,49 @@ SELECT user_id, 'SYSTEM_SEED', 'System generated initial Admin account'
 FROM users WHERE username = 'admin';
 
 -- 2g. Produk Kopi Contoh
---     Gayo Green Bean dari Aceh Tengah (belum disangrai, roast_level_id = NULL)
+--     Gayo Green Bean dari Aceh Tengah (belum disangrai, roast_level_id = NULL) - As Arabika
 INSERT INTO coffee_products (coffee_id, category_id, origin_id, roast_level_id, minimum_stock)
 SELECT
-    (SELECT coffee_id  FROM coffee_types      WHERE coffee_name  = 'Gayo'       LIMIT 1),
+    (SELECT coffee_id  FROM coffee_types      WHERE coffee_name  = 'Arabika'    LIMIT 1),
     (SELECT category_id FROM coffee_categories WHERE category_name = 'Green Bean' LIMIT 1),
     (SELECT origin_id  FROM coffee_origins    WHERE origin_name  = 'Aceh Tengah' LIMIT 1),
     NULL,
     20
 WHERE NOT EXISTS (
     SELECT 1 FROM coffee_products cp
-    WHERE cp.coffee_id    = (SELECT coffee_id  FROM coffee_types      WHERE coffee_name  = 'Gayo'        LIMIT 1)
+    WHERE cp.coffee_id    = (SELECT coffee_id  FROM coffee_types      WHERE coffee_name  = 'Arabika'     LIMIT 1)
       AND cp.category_id  = (SELECT category_id FROM coffee_categories WHERE category_name = 'Green Bean' LIMIT 1)
       AND cp.origin_id    = (SELECT origin_id  FROM coffee_origins    WHERE origin_name  = 'Aceh Tengah' LIMIT 1)
       AND cp.roast_level_id IS NULL
 );
 
---     Toraja Roasted Bean Medium Roast dari Tana Toraja
+--     Toraja Roasted Bean Medium Roast dari Tana Toraja - As Arabika
 INSERT INTO coffee_products (coffee_id, category_id, origin_id, roast_level_id, minimum_stock)
 SELECT
-    (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Toraja'       LIMIT 1),
+    (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Arabika'      LIMIT 1),
     (SELECT category_id FROM coffee_categories  WHERE category_name  = 'Roasted Bean' LIMIT 1),
     (SELECT origin_id   FROM coffee_origins     WHERE origin_name    = 'Tana Toraja'  LIMIT 1),
     (SELECT roast_level_id FROM roast_levels    WHERE roast_level_name = 'Medium Roast' LIMIT 1),
     15
 WHERE NOT EXISTS (
     SELECT 1 FROM coffee_products cp
-    WHERE cp.coffee_id       = (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Toraja'        LIMIT 1)
+    WHERE cp.coffee_id       = (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Arabika'       LIMIT 1)
       AND cp.category_id     = (SELECT category_id FROM coffee_categories  WHERE category_name  = 'Roasted Bean'  LIMIT 1)
       AND cp.origin_id       = (SELECT origin_id   FROM coffee_origins     WHERE origin_name    = 'Tana Toraja'   LIMIT 1)
       AND cp.roast_level_id  = (SELECT roast_level_id FROM roast_levels    WHERE roast_level_name = 'Medium Roast' LIMIT 1)
 );
 
---     Lampung Roasted Bean Dark Roast dari Tanggamus
+--     Lampung Roasted Bean Dark Roast dari Tanggamus - As Robusta
 INSERT INTO coffee_products (coffee_id, category_id, origin_id, roast_level_id, minimum_stock)
 SELECT
-    (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Lampung'     LIMIT 1),
+    (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Robusta'     LIMIT 1),
     (SELECT category_id FROM coffee_categories  WHERE category_name  = 'Roasted Bean' LIMIT 1),
     (SELECT origin_id   FROM coffee_origins     WHERE origin_name    = 'Tanggamus'   LIMIT 1),
     (SELECT roast_level_id FROM roast_levels    WHERE roast_level_name = 'Dark Roast' LIMIT 1),
     30
 WHERE NOT EXISTS (
     SELECT 1 FROM coffee_products cp
-    WHERE cp.coffee_id       = (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Lampung'      LIMIT 1)
+    WHERE cp.coffee_id       = (SELECT coffee_id   FROM coffee_types       WHERE coffee_name    = 'Robusta'      LIMIT 1)
       AND cp.category_id     = (SELECT category_id FROM coffee_categories  WHERE category_name  = 'Roasted Bean' LIMIT 1)
       AND cp.origin_id       = (SELECT origin_id   FROM coffee_origins     WHERE origin_name    = 'Tanggamus'    LIMIT 1)
       AND cp.roast_level_id  = (SELECT roast_level_id FROM roast_levels    WHERE roast_level_name = 'Dark Roast'  LIMIT 1)
@@ -473,18 +474,16 @@ FROM activity_logs al
 LEFT JOIN users u ON al.user_id = u.user_id
 ORDER BY al.log_time DESC;
 
--- 5d. Supplier Aktif
+-- 5d. Semua Supplier
 CREATE OR REPLACE VIEW vw_suppliers AS
 SELECT supplier_id, company_name, address, phone, is_active
 FROM suppliers
-WHERE is_active = true
 ORDER BY company_name;
 
--- 5e. Destinasi Aktif
+-- 5e. Semua Destinasi
 CREATE OR REPLACE VIEW vw_destinations AS
 SELECT destination_id, destination_name, address, is_active
 FROM destinations
-WHERE is_active = true
 ORDER BY destination_name;
 
 -- 5f. Produk Kopi (untuk combobox & grid di aplikasi)
@@ -721,6 +720,29 @@ BEGIN
 END;
 $$;
 
+-- 8b.1 Update Supplier
+CREATE OR REPLACE PROCEDURE sp_update_supplier(
+    p_admin_id    INT,
+    p_supplier_id INT,
+    p_company_name VARCHAR,
+    p_address     TEXT,
+    p_phone       VARCHAR,
+    p_is_active   BOOLEAN
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE suppliers 
+    SET company_name = p_company_name, 
+        address = p_address, 
+        phone = p_phone, 
+        is_active = p_is_active 
+    WHERE supplier_id = p_supplier_id;
+
+    INSERT INTO activity_logs (user_id, action, description)
+    VALUES (p_admin_id, 'UPDATE_SUPPLIER', 'Updated supplier_id: ' || p_supplier_id);
+END;
+$$;
+
 -- 8c. Tambah Destinasi
 CREATE OR REPLACE PROCEDURE sp_add_destination(
     p_admin_id         INT,
@@ -748,6 +770,27 @@ BEGIN
 
     INSERT INTO activity_logs (user_id, action, description)
     VALUES (p_admin_id, 'SOFT_DELETE_DESTINATION', 'Deactivated destination_id: ' || p_destination_id);
+END;
+$$;
+
+-- 8d.1 Update Destination
+CREATE OR REPLACE PROCEDURE sp_update_destination(
+    p_admin_id       INT,
+    p_destination_id INT,
+    p_destination_name VARCHAR,
+    p_address        TEXT,
+    p_is_active      BOOLEAN
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE destinations 
+    SET destination_name = p_destination_name, 
+        address = p_address, 
+        is_active = p_is_active 
+    WHERE destination_id = p_destination_id;
+
+    INSERT INTO activity_logs (user_id, action, description)
+    VALUES (p_admin_id, 'UPDATE_DESTINATION', 'Updated destination_id: ' || p_destination_id);
 END;
 $$;
 
@@ -873,3 +916,158 @@ BEGIN
     VALUES (p_destination_id, p_product_id, p_quantity, p_petugas_id);
 END;
 $$;
+
+
+-- ============================================================================
+-- SECTION 10: VIEWS & FUNCTIONS FOR MVC REFACTORING
+-- ============================================================================
+
+-- 10.1. Views untuk Data Master Statis
+CREATE OR REPLACE VIEW vw_active_suppliers AS
+SELECT supplier_id, company_name 
+FROM suppliers 
+WHERE is_active = true
+ORDER BY company_name;
+
+CREATE OR REPLACE VIEW vw_active_destinations AS
+SELECT destination_id, destination_name 
+FROM destinations 
+WHERE is_active = true
+ORDER BY destination_name;
+
+-- 10.2. Functions untuk Cascading Dropdown (Dynamic)
+CREATE OR REPLACE FUNCTION fn_get_cascading_jenis_kopi()
+RETURNS TABLE (coffee_id INT, coffee_name VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT ct.coffee_id, ct.coffee_name 
+    FROM coffee_products cp 
+    JOIN coffee_types ct ON cp.coffee_id = ct.coffee_id 
+    WHERE cp.is_active = true AND ct.is_active = true 
+    ORDER BY ct.coffee_name;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_cascading_kategori(p_coffee_id INT)
+RETURNS TABLE (category_id INT, category_name VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT cc.category_id, cc.category_name 
+    FROM coffee_products cp 
+    JOIN coffee_categories cc ON cp.category_id = cc.category_id 
+    WHERE cp.coffee_id = p_coffee_id AND cp.is_active = true 
+    ORDER BY cc.category_name;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_cascading_origin(p_coffee_id INT, p_category_id INT)
+RETURNS TABLE (origin_id INT, origin_name VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT co.origin_id, co.origin_name 
+    FROM coffee_products cp 
+    JOIN coffee_origins co ON cp.origin_id = co.origin_id 
+    WHERE cp.coffee_id = p_coffee_id AND cp.category_id = p_category_id 
+      AND cp.is_active = true AND co.is_active = true 
+    ORDER BY co.origin_name;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_cascading_roast_level(p_coffee_id INT, p_category_id INT, p_origin_id INT)
+RETURNS TABLE (roast_level_id INT, roast_level_name VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT DISTINCT rl.roast_level_id, rl.roast_level_name 
+    FROM coffee_products cp 
+    JOIN roast_levels rl ON cp.roast_level_id = rl.roast_level_id 
+    WHERE cp.coffee_id = p_coffee_id AND cp.category_id = p_category_id AND cp.origin_id = p_origin_id 
+      AND cp.is_active = true AND rl.is_active = true 
+    ORDER BY rl.roast_level_name;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 10.3. Function untuk Mendapatkan / Membuat Produk
+CREATE OR REPLACE FUNCTION fn_get_or_create_product(
+    p_coffee_id INT,
+    p_category_id INT,
+    p_origin_id INT,
+    p_roast_level_id INT
+) RETURNS INT AS $$
+DECLARE
+    v_product_id INT;
+BEGIN
+    -- Coba cari produk yang sudah ada (termasuk pengecekan NULL)
+    SELECT product_id INTO v_product_id
+    FROM coffee_products
+    WHERE coffee_id = p_coffee_id
+      AND category_id = p_category_id
+      AND origin_id = p_origin_id
+      AND (
+          (roast_level_id = p_roast_level_id AND p_roast_level_id > 0)
+          OR (roast_level_id IS NULL AND (p_roast_level_id = 0 OR p_roast_level_id IS NULL))
+      )
+    LIMIT 1;
+
+    -- Jika belum ada, buat baru
+    IF v_product_id IS NULL THEN
+        INSERT INTO coffee_products (
+            coffee_id, category_id, origin_id, roast_level_id, minimum_stock
+        )
+        VALUES (
+            p_coffee_id, 
+            p_category_id, 
+            p_origin_id, 
+            CASE WHEN p_roast_level_id > 0 THEN p_roast_level_id ELSE NULL END, 
+            20
+        )
+        RETURNING product_id INTO v_product_id;
+    END IF;
+
+    RETURN v_product_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- 10.4. Functions untuk Laporan (Filter Tanggal)
+CREATE OR REPLACE FUNCTION fn_get_laporan_penerimaan(p_start_date DATE, p_end_date DATE)
+RETURNS TABLE (
+    "Tanggal" TIMESTAMP,
+    "Supplier" VARCHAR,
+    "JenisKopi" VARCHAR,
+    "Jumlah" INT,
+    "Petugas" VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        tanggal AS "Tanggal",
+        supplier AS "Supplier",
+        jenis_kopi AS "JenisKopi",
+        jumlah AS "Jumlah",
+        petugas AS "Petugas"
+    FROM vw_incoming_transactions
+    WHERE tanggal >= p_start_date AND tanggal < p_end_date
+    ORDER BY tanggal DESC;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_laporan_pengiriman(p_start_date DATE, p_end_date DATE)
+RETURNS TABLE (
+    "Tanggal" TIMESTAMP,
+    "Destinasi" VARCHAR,
+    "JenisKopi" VARCHAR,
+    "Jumlah" INT,
+    "Petugas" VARCHAR
+) AS $$
+BEGIN
+    RETURN QUERY
+    SELECT 
+        tanggal AS "Tanggal",
+        destinasi AS "Destinasi",
+        jenis_kopi AS "JenisKopi",
+        jumlah AS "Jumlah",
+        petugas AS "Petugas"
+    FROM vw_outgoing_transactions
+    WHERE tanggal >= p_start_date AND tanggal < p_end_date
+    ORDER BY tanggal DESC;
+END;
+$$ LANGUAGE plpgsql;
