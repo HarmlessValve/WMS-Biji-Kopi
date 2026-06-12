@@ -4,14 +4,10 @@ using System.Windows.Forms;
 using System.Linq;
 using System.Collections.Generic;
 using CoffeeWMS.Models;
-using CoffeeWMS.Repositories;
-using CoffeeWMS.Theme;
-
-using CoffeeWMS.Views.Interfaces;
-
+using CoffeeWMS.Controllers;
 namespace CoffeeWMS.Views
 {
-    public partial class UserManagementForm : UserControl, IUserManagementView
+    public partial class UserManagementForm : UserControl
     {
         
         private int _editingUserId = 0;
@@ -146,3 +142,5 @@ namespace CoffeeWMS.Views
         }
     }
 }
+
+

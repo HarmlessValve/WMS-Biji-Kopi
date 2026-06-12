@@ -1,8 +1,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Theme;
-
 namespace CoffeeWMS.Views
 {
     partial class UserManagementForm
@@ -279,3 +277,4 @@ namespace CoffeeWMS.Views
         private System.Windows.Forms.CheckBox chkShowInactive;
     }
 }
+

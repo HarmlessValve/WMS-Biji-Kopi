@@ -3,7 +3,7 @@ using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
 using CoffeeWMS.Models;
-using CoffeeWMS.Repositories;
+
 using Npgsql;
 using CoffeeWMS.Data;
 
@@ -19,7 +19,7 @@ namespace CoffeeWMS.Views
         private TextBox txtJumlah;
         private Button btnSimpan;
         private DataGridView dgvPengiriman;
-        private TransaksiRepository repo = new TransaksiRepository();
+
 
         public PengirimanView()
         {
@@ -147,7 +147,7 @@ namespace CoffeeWMS.Views
             }
 
             // Eksekusi repository dengan tipe data integer (Sesuai modifikasi DB kemarin)
-            bool sukses = repo.InsertPengiriman(destinationId, coffeeId, categoryId, roastLevelId, jumlah, petugasId);
+            bool sukses = this.InsertPengiriman(destinationId, coffeeId, categoryId, roastLevelId, jumlah, petugasId);
 
             if (sukses)
             {
@@ -166,7 +166,7 @@ namespace CoffeeWMS.Views
 
         private void RefreshGrid()
         {
-            var dt = repo.GetDataPengiriman();
+            var dt = this.GetDataPengiriman();
             if (dt != null && dt.Rows.Count > 0) 
             {
                 dgvPengiriman.DataSource = dt;
@@ -192,6 +192,87 @@ namespace CoffeeWMS.Views
                 dgvPengiriman.Columns.Add("Jumlah", "Jumlah (Kg)");
             }
             dgvPengiriman.Rows.Add(DateTime.Now.ToString("yyyy-MM-dd HH:mm"), cmbDestinasi.Text, jenis, jumlah);
+        }
+
+        private int GetOrCreateProduct(NpgsqlConnection conn, int coffeeId, int categoryId, int roastLevelId)
+        {
+            conn.Open(); 
+            int productId = 0;
+            string query = "SELECT product_id FROM coffee_products WHERE coffee_id = @c AND category_id = @cat ";
+            if (roastLevelId > 0) query += "AND roast_level_id = @r ";
+            else query += "AND roast_level_id IS NULL ";
+            query += "LIMIT 1";
+
+            using (var cmd = new NpgsqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("c", coffeeId);
+                cmd.Parameters.AddWithValue("cat", categoryId);
+                if (roastLevelId > 0) cmd.Parameters.AddWithValue("r", roastLevelId);
+                
+                var res = cmd.ExecuteScalar();
+                if (res != null && res != DBNull.Value) productId = Convert.ToInt32(res);
+            }
+
+            if (productId == 0)
+            {
+                string insertQuery = "INSERT INTO coffee_products (coffee_id, category_id, roast_level_id, minimum_stock) VALUES (@c, @cat, @r, 20) RETURNING product_id";
+                using (var cmd = new NpgsqlCommand(insertQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("c", coffeeId);
+                    cmd.Parameters.AddWithValue("cat", categoryId);
+                    if (roastLevelId > 0) cmd.Parameters.AddWithValue("r", roastLevelId);
+                    else cmd.Parameters.AddWithValue("r", DBNull.Value);
+                    
+                    productId = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+            }
+            return productId;
+        }
+
+        private bool InsertPengiriman(int destinationId, int coffeeId, int categoryId, int roastLevelId, int quantity, int petugasId)
+        {
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open(); // ← wajib ada karena GetConnection() tidak open otomatis
+                    int productId = GetOrCreateProduct(conn, coffeeId, categoryId, roastLevelId);
+
+                    using (var cmd = new NpgsqlCommand("CALL sp_add_outgoing_transaction(@d, @p_id, @q, @p)", conn))
+                    {
+                        cmd.Parameters.AddWithValue("d", destinationId);
+                        cmd.Parameters.AddWithValue("p_id", productId);
+                        cmd.Parameters.AddWithValue("q", quantity);
+                        cmd.Parameters.AddWithValue("p", petugasId);
+                        cmd.ExecuteNonQuery();
+                        return true;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Detail error:\n" + ex.Message + "\n\n" + ex.GetType().Name,
+                                "Debug Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return false;
+            }
+        }
+
+        private DataTable GetDataPengiriman()
+        {
+            DataTable dt = new DataTable();
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    string query = "SELECT tanggal AS Tanggal, destinasi AS Destinasi, jenis_kopi AS JenisKopi, jumlah AS Jumlah, petugas AS Petugas FROM vw_outgoing_transactions";
+                    using (var da = new NpgsqlDataAdapter(query, conn)) { da.Fill(dt); }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetDataPengiriman): " + ex.Message);
+            }
+            return dt;
         }
     }
 }

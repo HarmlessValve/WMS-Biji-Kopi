@@ -2,11 +2,11 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using CoffeeWMS.Models;
-using CoffeeWMS.Views.Interfaces;
+
 
 namespace CoffeeWMS.Views
 {
-    public class DataManagementForm : UserControl, IDataManagementView
+    public class DataManagementForm : UserControl
     {
         private DataGridView dgvSuppliers;
         private DataGridView dgvDestinations;

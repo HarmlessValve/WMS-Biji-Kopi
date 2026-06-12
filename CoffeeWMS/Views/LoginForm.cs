@@ -1,17 +1,11 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Theme;
-
 using System.Linq;
 using CoffeeWMS.Models;
-using CoffeeWMS.Repositories;
-
-using CoffeeWMS.Views.Interfaces;
-
 namespace CoffeeWMS.Views
 {
-    public partial class LoginForm : Form, ILoginView
+    public partial class LoginForm : Form
     {
 
         [System.ComponentModel.DesignerSerializationVisibility(System.ComponentModel.DesignerSerializationVisibility.Hidden)]
@@ -58,3 +52,5 @@ namespace CoffeeWMS.Views
         }
     }
 }
+
+

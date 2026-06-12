@@ -1,8 +1,6 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Theme;
-
 namespace CoffeeWMS.Views
 {
     partial class LoginForm
@@ -72,7 +70,7 @@ namespace CoffeeWMS.Views
             this.lblTitle.Name = "lblTitle";
             this.lblTitle.Size = new Size(400, 30);
             this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "☕ CoffeeWMS";
+            this.lblTitle.Text = "â˜• CoffeeWMS";
             this.lblTitle.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblSubtitle
@@ -188,3 +186,4 @@ namespace CoffeeWMS.Views
         private System.Windows.Forms.Label lblVersion;
     }
 }
+
