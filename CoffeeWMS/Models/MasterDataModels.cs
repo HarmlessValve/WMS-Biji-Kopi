@@ -51,6 +51,8 @@ namespace CoffeeWMS.Models
         public int CurrentQuantity { get; set; }
         public int MinimumStock { get; set; }
         public bool IsActive { get; set; }
+        public int? RoastLevelId { get; set; }
+        public string RoastLevelName { get; set; }
     }
 
     // Sesuai tabel: coffee_categories
@@ -71,6 +73,15 @@ namespace CoffeeWMS.Models
         public bool IsActive { get; set; }
     }
 
+    //sesuai tabel roast_level
+    public class RoastLevel
+    {
+        public int RoastLevelId { get; set; }
+        public string RoastLevelName { get; set; }
+        public string Description { get; set; }
+        public bool IsActive { get; set; }
+    }
+
     // Sesuai view: stock_summary
     public class StockSummary
     {
@@ -78,6 +89,7 @@ namespace CoffeeWMS.Models
         public string CoffeeName { get; set; }
         public string CategoryName { get; set; }
         public string OriginName { get; set; }
+        public string RoastLevelName { get; set; }
         public int CurrentQuantity { get; set; }
         public int MinimumStock { get; set; }
         public string Status { get; set; } // "LOW" atau "SAFE"

@@ -1,16 +1,14 @@
 using System;
-using CoffeeWMS.Views.Interfaces;
 using CoffeeWMS.Views;
-using CoffeeWMS.Repositories;
 using CoffeeWMS.Models;
 
 namespace CoffeeWMS.Controllers
 {
     public class MainController
     {
-        private readonly IMainView _view;
+        private readonly MainForm _view;
 
-        public MainController(IMainView view)
+        public MainController(MainForm view)
         {
             _view = view;
             

@@ -2,11 +2,11 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using CoffeeWMS.Models;
-using CoffeeWMS.Views.Interfaces;
+
 
 namespace CoffeeWMS.Views
 {
-    public class DataManagementForm : UserControl, IDataManagementView
+    public class DataManagementForm : UserControl
     {
         private DataGridView dgvSuppliers;
         private DataGridView dgvDestinations;
@@ -14,13 +14,15 @@ namespace CoffeeWMS.Views
         private ComboBox cmbCoffeeType;
         private ComboBox cmbCategory;
         private ComboBox cmbOrigin;
+        private ComboBox cmbRoastLevel;
+        private Label lblRoastLevel;
 
         public event EventHandler LoadDataRequested;
         public event EventHandler<Supplier> AddSupplierRequested;
         public event EventHandler<int> DeleteSupplierRequested;
         public event EventHandler<Destination> AddDestinationRequested;
         public event EventHandler<int> DeleteDestinationRequested;
-        public event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock)> AddCoffeeProductRequested;
+        public event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId)> AddCoffeeProductRequested;
         public event EventHandler<int> DeleteCoffeeProductRequested;
         public event EventHandler<CoffeeOrigin> AddCoffeeOriginRequested;
 
@@ -83,13 +85,41 @@ namespace CoffeeWMS.Views
             cmbCategory = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(170, 10), Width = 150 };
             cmbOrigin = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, Location = new Point(330, 10), Width = 150 };
             
-            var lblStock = new Label { Text = "Minimum Stok:", Location = new Point(490, 12), AutoSize = true };
-            var numStock = new NumericUpDown { Location = new Point(590, 10), Width = 80, Maximum = 1000000 };
+            lblRoastLevel = new Label 
+            { 
+                Text = "Roast Level:", 
+                Location = new Point(490, 12), 
+                AutoSize = true,
+                Visible = false
+            };
+
+            cmbRoastLevel = new ComboBox 
+            { 
+                DropDownStyle = ComboBoxStyle.DropDownList, 
+                Location = new Point(580, 10), 
+                Width = 150,
+                Visible = false
+            };
+
+            var lblStock = new Label { Text = "Minimum Stok:", Location = new Point(740, 12), AutoSize = true };
+            var numStock = new NumericUpDown { Location = new Point(850, 10), Width = 80, Maximum = 1000000 };
             
             var btnAddProduct = new Button { Text = "Tambah Produk", Location = new Point(10, 50), FlatStyle = FlatStyle.Flat, Width = 150, Height = 35, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White };
             var btnDelProduct = new Button { Text = "Hapus Produk", Location = new Point(170, 50), FlatStyle = FlatStyle.Flat, Width = 150, Height = 35, BackColor = Color.FromArgb(222, 5, 0), ForeColor = Color.White };
             
-            pnlProdButtons.Controls.AddRange(new Control[] { cmbCoffeeType, cmbCategory, cmbOrigin, lblStock, numStock, btnAddProduct, btnDelProduct });
+            pnlProdButtons.Controls.AddRange(new Control[] 
+            { 
+                cmbCoffeeType, 
+                cmbCategory, 
+                cmbOrigin, 
+                lblRoastLevel,
+                cmbRoastLevel,
+                lblStock, 
+                numStock, 
+                btnAddProduct, 
+                btnDelProduct 
+            });
+            
             dgvProducts = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true, AllowUserToAddRows = false, BackgroundColor = Color.White, SelectionMode = DataGridViewSelectionMode.FullRowSelect, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill };
             pnlProducts.Controls.Add(dgvProducts);
             pnlProducts.Controls.Add(pnlProdButtons);
@@ -138,15 +168,42 @@ namespace CoffeeWMS.Views
                         DeleteDestinationRequested?.Invoke(this, id);
                 }
             };
+            
+            cmbCategory.SelectedIndexChanged += (s, e) =>
+            {
+                UpdateRoastLevelVisibility();
+            };
+            
+            btnAddProduct.Click += (s, e) => 
+            { 
+                if (cmbCoffeeType.SelectedValue == null || cmbCategory.SelectedValue == null || cmbOrigin.SelectedValue == null) 
+                {
+                    MessageBox.Show("Jenis kopi, kategori, dan origin wajib dipilih!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-            btnAddProduct.Click += (s, e) => {
-                if (cmbCoffeeType.SelectedValue == null || cmbCategory.SelectedValue == null || cmbOrigin.SelectedValue == null) return;
-                int cTypeId = (int)cmbCoffeeType.SelectedValue;
-                int catId = (int)cmbCategory.SelectedValue;
-                int originId = (int)cmbOrigin.SelectedValue;
-                int stock = (int)numStock.Value;
-                AddCoffeeProductRequested?.Invoke(this, (cTypeId, catId, originId, stock));
+                int cTypeId = (int)cmbCoffeeType.SelectedValue; 
+                int catId = (int)cmbCategory.SelectedValue; 
+                int originId = (int)cmbOrigin.SelectedValue; 
+                int stock = (int)numStock.Value; 
+
+                int? roastLevelId = null;
+
+                if (cmbRoastLevel.Visible)
+                {
+                    if (cmbRoastLevel.SelectedValue == null)
+                    {
+                        MessageBox.Show("Roast Level wajib dipilih untuk kategori Roasted Bean!", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+
+                    roastLevelId = (int)cmbRoastLevel.SelectedValue;
+                }
+    
+                AddCoffeeProductRequested?.Invoke(this, (cTypeId, catId, originId, stock, roastLevelId)); 
+
                 numStock.Value = 0;
+                cmbRoastLevel.SelectedIndex = -1;
             };
 
             btnDelProduct.Click += (s, e) => {
@@ -157,6 +214,24 @@ namespace CoffeeWMS.Views
                         DeleteCoffeeProductRequested?.Invoke(this, id);
                 }
             };
+        }
+
+        private void UpdateRoastLevelVisibility()
+        {
+            if (cmbCategory.SelectedItem is CoffeeCategory selectedCategory)
+            {
+                bool isRoastedBean = selectedCategory.CategoryName
+                    .ToLower()
+                    .Contains("roasted bean");
+
+                lblRoastLevel.Visible = isRoastedBean;
+                cmbRoastLevel.Visible = isRoastedBean;
+
+                if (!isRoastedBean)
+                {
+                    cmbRoastLevel.SelectedIndex = -1;
+                }
+            }
         }
 
         public void DisplaySuppliers(object dataSource) => dgvSuppliers.DataSource = dataSource;
@@ -182,6 +257,14 @@ namespace CoffeeWMS.Views
             cmbOrigin.DataSource = dataSource;
             cmbOrigin.DisplayMember = "OriginName";
             cmbOrigin.ValueMember = "OriginId";
+        }
+
+        public void PopulateRoastLevels(object dataSource)
+        {
+            cmbRoastLevel.DataSource = dataSource;
+            cmbRoastLevel.DisplayMember = "RoastLevelName";
+            cmbRoastLevel.ValueMember = "RoastLevelId";
+            cmbRoastLevel.SelectedIndex = -1;
         }
 
         public void ShowMessage(string message, bool isError = false)

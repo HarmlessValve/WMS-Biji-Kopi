@@ -102,6 +102,7 @@ DROP TABLE IF EXISTS stock; -- Jaga-jaga jika skema lama masih tersisa
 DROP TABLE IF EXISTS coffee_origins;
 DROP TABLE IF EXISTS coffee_categories;
 DROP TABLE IF EXISTS coffee_types;
+DROP TABLE IF EXISTS roast_levels;
 
 -- ============================================================================
 -- SELESAI — Database bersih total tanpa error Foreign Key Constraint

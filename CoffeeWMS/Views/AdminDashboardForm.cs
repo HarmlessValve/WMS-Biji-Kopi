@@ -1,11 +1,11 @@
 using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Views.Interfaces;
+
 
 namespace CoffeeWMS.Views
 {
-    public class AdminDashboardForm : UserControl, IAdminDashboardView
+    public class AdminDashboardForm : UserControl
     {
         private DataGridView dgvLogs;
         private DataGridView dgvSuppliers;

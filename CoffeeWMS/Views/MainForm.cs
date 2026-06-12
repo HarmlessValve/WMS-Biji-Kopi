@@ -1,14 +1,10 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
 using CoffeeWMS.Models;
-using CoffeeWMS.Theme;
-
-using CoffeeWMS.Views.Interfaces;
-
 namespace CoffeeWMS.Views
 {
-    public partial class MainForm : BaseForm, IMainView
+    public partial class MainForm : BaseForm
     {
         public event EventHandler ViewLoaded;
         public event EventHandler LogoutRequested;
@@ -78,7 +74,7 @@ namespace CoffeeWMS.Views
             if (Session.IsAdmin)
             {
                 var view = new AdminDashboardForm();
-                var controller = new CoffeeWMS.Controllers.AdminDashboardController(view, new CoffeeWMS.Repositories.MasterDataRepository());
+                var controller = new CoffeeWMS.Controllers.AdminDashboardController(view);
                 LoadView(view, "Admin Dashboard");
             }
             else
@@ -121,7 +117,7 @@ private void ShowPlaceholder(string module)
         public void ShowUserManagement()
         {
             var umView = new UserManagementForm();
-            var umController = new CoffeeWMS.Controllers.UserManagementController(umView, new CoffeeWMS.Repositories.UserRepository());
+            var umController = new CoffeeWMS.Controllers.UserManagementController(umView);
             LoadView(umView, "Manajemen Pengguna");
             umView.TriggerLoad();
         }
@@ -129,7 +125,7 @@ private void ShowPlaceholder(string module)
         public void ShowDataManagement()
         {
             var view = new DataManagementForm();
-            var controller = new CoffeeWMS.Controllers.DataManagementController(view, new CoffeeWMS.Repositories.MasterDataRepository());
+            var controller = new CoffeeWMS.Controllers.DataManagementController(view);
             LoadView(view, "Manajemen Master Data");
         }
 
@@ -139,3 +135,4 @@ private void ShowPlaceholder(string module)
         }
     }
 }
+

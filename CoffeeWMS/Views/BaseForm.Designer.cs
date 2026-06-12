@@ -1,8 +1,6 @@
-using System;
+﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using CoffeeWMS.Theme;
-
 namespace CoffeeWMS.Views
 {
     partial class BaseForm
@@ -41,7 +39,7 @@ namespace CoffeeWMS.Views
             pnlLogo.Height = 70;
             
             this.lblLogo = new Label();
-            this.lblLogo.Text = "☕ CoffeeWMS";
+            this.lblLogo.Text = "â˜• CoffeeWMS";
             this.lblLogo.ForeColor = Color.White;
             this.lblLogo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             this.lblLogo.AutoSize = false;
@@ -96,3 +94,4 @@ namespace CoffeeWMS.Views
         private System.Windows.Forms.Label lblLogo;
     }
 }
+
