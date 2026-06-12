@@ -12,6 +12,9 @@ namespace CoffeeWMS.Views
     public class PenerimaanView : UserControl
     {
         private ComboBox cmbJenisKopi;
+        private ComboBox cmbKategori; // Dropdown kategori kopi
+        private ComboBox cmbRoastLevel;
+        private Label lblRoastLevel;
         private ComboBox cmbSupplier; // Ditambahkan agar supplier tidak di-hardcode teks lagi
         private TextBox txtJumlah;
         private Button btnSimpan;
@@ -33,20 +36,35 @@ namespace CoffeeWMS.Views
             Label lblTitle = new Label { Text = "Input Penerimaan Kopi", Font = new Font("Segoe UI", 16, FontStyle.Bold), AutoSize = true, Location = new Point(30, 20) };
             
             Label lblSupplier = new Label { Text = "Supplier:", Location = new Point(35, 70), AutoSize = true };
-            cmbSupplier = new ComboBox { Location = new Point(35, 95), Width = 180, DropDownStyle = ComboBoxStyle.DropDownList };
+            cmbSupplier = new ComboBox { Location = new Point(35, 95), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
 
-            Label lblJenis = new Label { Text = "Jenis Kopi:", Location = new Point(235, 70), AutoSize = true };
-            cmbJenisKopi = new ComboBox { Location = new Point(235, 95), Width = 180, DropDownStyle = ComboBoxStyle.DropDownList };
+            Label lblJenis = new Label { Text = "Jenis Kopi:", Location = new Point(205, 70), AutoSize = true };
+            cmbJenisKopi = new ComboBox { Location = new Point(205, 95), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
 
-            Label lblJumlah = new Label { Text = "Jumlah (Kg):", Location = new Point(435, 70), AutoSize = true };
-            txtJumlah = new TextBox { Location = new Point(435, 95), Width = 100 };
+            Label lblKategori = new Label { Text = "Kategori Kopi:", Location = new Point(375, 70), AutoSize = true };
+            cmbKategori = new ComboBox { Location = new Point(375, 95), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList };
 
-            btnSimpan = new Button { Text = "Simpan Data", Location = new Point(35, 135), Width = 120, Height = 30, BackColor = Color.FromArgb(41, 53, 65), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            Label lblJumlah = new Label { Text = "Jumlah (Kg):", Location = new Point(545, 70), AutoSize = true };
+            txtJumlah = new TextBox { Location = new Point(545, 95), Width = 100 };
+
+            lblRoastLevel = new Label { Text = "Roast Level:", Location = new Point(375, 125), AutoSize = true, Visible = false };
+            cmbRoastLevel = new ComboBox { Location = new Point(375, 150), Width = 150, DropDownStyle = ComboBoxStyle.DropDownList, Visible = false };
+
+            cmbKategori.SelectedIndexChanged += CmbKategori_SelectedIndexChanged;
+
+            btnSimpan = new Button { Text = "Simpan Data", Location = new Point(35, 140), Width = 120, Height = 30, BackColor = Color.FromArgb(41, 53, 65), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnSimpan.Click += BtnSimpan_Click;
 
-            dgvPenerimaan = new DataGridView { Location = new Point(35, 185), Width = 600, Height = 250, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
+            dgvPenerimaan = new DataGridView { Location = new Point(35, 190), Width = 610, Height = 245, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
 
-            this.Controls.AddRange(new Control[] { lblTitle, lblSupplier, cmbSupplier, lblJenis, cmbJenisKopi, lblJumlah, txtJumlah, btnSimpan, dgvPenerimaan });
+            this.Controls.AddRange(new Control[] { lblTitle, lblSupplier, cmbSupplier, lblJenis, cmbJenisKopi, lblKategori, cmbKategori, lblJumlah, txtJumlah, lblRoastLevel, cmbRoastLevel, btnSimpan, dgvPenerimaan });
+        }
+
+        private void CmbKategori_SelectedIndexChanged(object? sender, EventArgs e)
+        {
+            bool isRoasted = cmbKategori.Text.Equals("Roasted Bean", StringComparison.OrdinalIgnoreCase);
+            lblRoastLevel.Visible = isRoasted;
+            cmbRoastLevel.Visible = isRoasted;
         }
 
         private void LoadComboBoxData()
@@ -63,6 +81,24 @@ namespace CoffeeWMS.Views
                     cmbJenisKopi.DataSource = dtKopi;
                     cmbJenisKopi.DisplayMember = "coffee_name";
                     cmbJenisKopi.ValueMember = "coffee_id";
+
+                    // Load Data Kategori
+                    string qKategori = "SELECT category_id, category_name FROM coffee_categories";
+                    DataTable dtKategori = new DataTable();
+                    using (var da = new NpgsqlDataAdapter(qKategori, conn)) { da.Fill(dtKategori); }
+                    
+                    cmbKategori.DataSource = dtKategori;
+                    cmbKategori.DisplayMember = "category_name";
+                    cmbKategori.ValueMember = "category_id";
+
+                    // Load Data Roast Level
+                    string qRoast = "SELECT roast_level_id, roast_level_name FROM roast_levels WHERE is_active = true";
+                    DataTable dtRoast = new DataTable();
+                    using (var da = new NpgsqlDataAdapter(qRoast, conn)) { da.Fill(dtRoast); }
+                    
+                    cmbRoastLevel.DataSource = dtRoast;
+                    cmbRoastLevel.DisplayMember = "roast_level_name";
+                    cmbRoastLevel.ValueMember = "roast_level_id";
 
                     // 2. Load Data Supplier
                     string qSupplier = "SELECT supplier_id, company_name FROM suppliers WHERE is_active = true";
@@ -92,16 +128,28 @@ namespace CoffeeWMS.Views
             // Ambil ID (ValueMember) bukan Teks bebas
             int supplierId = (cmbSupplier.SelectedValue as int?) ?? 0;
             int coffeeId = (cmbJenisKopi.SelectedValue as int?) ?? 0;
+            int categoryId = (cmbKategori.SelectedValue as int?) ?? 0;
             int petugasId = Session.CurrentUser?.UserId ?? 1;
 
-            if (supplierId == 0 || coffeeId == 0)
+            if (supplierId == 0 || coffeeId == 0 || categoryId == 0)
             {
-                MessageBox.Show("Data Supplier atau Jenis Kopi belum dipilih dengan benar!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                MessageBox.Show("Data Supplier, Jenis, atau Kategori Kopi belum dipilih dengan benar!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                 return;
             }
 
-            // Kirim 4 argumen int sesuai dengan repository baru
-            bool sukses = repo.InsertPenerimaan(supplierId, coffeeId, jumlah, petugasId);
+            int roastLevelId = 0;
+            if (cmbKategori.Text.Equals("Roasted Bean", StringComparison.OrdinalIgnoreCase))
+            {
+                roastLevelId = (cmbRoastLevel.SelectedValue as int?) ?? 0;
+                if (roastLevelId == 0)
+                {
+                    MessageBox.Show("Data Roast Level belum dipilih!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+            }
+
+            // Kirim argumen sesuai dengan repository baru
+            bool sukses = repo.InsertPenerimaan(supplierId, coffeeId, categoryId, roastLevelId, jumlah, petugasId);
 
             if (sukses)
             {
@@ -112,7 +160,8 @@ namespace CoffeeWMS.Views
             else
             {
                 MessageBox.Show("Koneksi DB gagal/Tabel belum siap. Data dialihkan ke simulasi layar.", "Informasi", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                SimulasiLokal(cmbJenisKopi.Text ?? "Unknown", jumlah);
+                string roastText = roastLevelId > 0 ? $" ({cmbRoastLevel.Text})" : "";
+                SimulasiLokal(cmbJenisKopi.Text + " - " + cmbKategori.Text + roastText, jumlah);
                 txtJumlah.Clear();
             }
         }

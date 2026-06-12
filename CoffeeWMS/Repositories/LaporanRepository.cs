@@ -102,6 +102,7 @@ namespace CoffeeWMS.Repositories
                             coffee_id AS ""ID Kopi"",
                             coffee_name AS ""Nama Kopi"",
                             category_name AS ""Kategori"",
+                            COALESCE(roast_level_name, '-') AS ""Roast Level"",
                             current_quantity AS ""Stok Saat Ini"",
                             minimum_stock AS ""Minimum Stok"",
                             status AS ""Status""
@@ -135,6 +136,8 @@ namespace CoffeeWMS.Repositories
                         SELECT
                             coffee_id AS ""ID Kopi"",
                             coffee_name AS ""Nama Kopi"",
+                            category_name AS ""Kategori"",
+                            COALESCE(roast_level_name, '-') AS ""Roast Level"",
                             current_quantity AS ""Stok Saat Ini"",
                             minimum_stock AS ""Minimum Stok"",
                             minimum_stock - current_quantity AS ""Kekurangan""

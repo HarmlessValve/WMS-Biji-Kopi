@@ -13,7 +13,7 @@ namespace CoffeeWMS.Views.Interfaces
         event EventHandler<Destination> AddDestinationRequested;
         event EventHandler<int> DeleteDestinationRequested;
 
-        event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock)> AddCoffeeProductRequested;
+        event EventHandler<(int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId)> AddCoffeeProductRequested;
         event EventHandler<int> DeleteCoffeeProductRequested;
 
         // TAMBAHAN BARU: buat tambah origin dari aplikasi
@@ -28,5 +28,7 @@ namespace CoffeeWMS.Views.Interfaces
         void PopulateOrigins(object dataSource);
 
         void ShowMessage(string message, bool isError = false);
+
+        void PopulateRoastLevels(object dataSource);
     }
 }

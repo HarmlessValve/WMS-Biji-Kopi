@@ -30,7 +30,9 @@ namespace CoffeeWMS.Views
         public LaporanView()
         {
             InitializeComponent();
-            LoadSummary();
+            DateTime mulai = dtpMulai.Value.Date;
+            DateTime selesai = dtpSelesai.Value.Date;
+            LoadSummary(mulai, selesai);
             LoadLaporan();
         }
 
@@ -212,6 +214,9 @@ namespace CoffeeWMS.Views
 
         private void BtnTampilkan_Click(object sender, EventArgs e)
         {
+            DateTime mulai = dtpMulai.Value.Date;
+            DateTime selesai = dtpSelesai.Value.Date;
+            LoadSummary(mulai, selesai);
             LoadLaporan();
         }
 
@@ -221,33 +226,25 @@ namespace CoffeeWMS.Views
             dtpSelesai.Value = DateTime.Now.Date;
             cmbJenisLaporan.SelectedIndex = 0;
 
-            LoadSummary();
+            DateTime mulai = dtpMulai.Value.Date;
+            DateTime selesai = dtpSelesai.Value.Date;
+
+            LoadSummary(mulai, selesai);
             LoadLaporan();
         }
 
-        private void LoadSummary()
+        private void LoadSummary(DateTime mulai, DateTime selesai)
         {
             try
             {
-                DataTable summary = _repository.GetDashboardSummary();
-
-                int totalIncoming = 0;
-                int totalOutgoing = 0;
-                int totalLowStock = 0;
-
-                if (summary.Rows.Count > 0)
-                {
-                    DataRow row = summary.Rows[0];
-
-                    totalIncoming = Convert.ToInt32(row["total_incoming"]);
-                    totalOutgoing = Convert.ToInt32(row["total_outgoing"]);
-                    totalLowStock = Convert.ToInt32(row["total_low_stock"]);
-                }
+                int totalIncoming = _repository.GetLaporanPenerimaan(mulai, selesai).Rows.Count;
+                int totalOutgoing = _repository.GetLaporanPengiriman(mulai, selesai).Rows.Count;
+                int totalLowStock = _repository.GetLaporanStokRendah().Rows.Count;
 
                 int totalStok = _repository.GetTotalStok();
 
-                lblTotalPenerimaan.Text = $"Penerimaan\n{totalIncoming} transaksi";
-                lblTotalPengiriman.Text = $"Pengiriman\n{totalOutgoing} transaksi";
+                lblTotalPenerimaan.Text = $"Penerimaan Total\n{totalIncoming} transaksi";
+                lblTotalPengiriman.Text = $"Pengiriman Total\n{totalOutgoing} transaksi";
                 lblTotalStok.Text = $"Total Stok\n{totalStok} kg";
                 lblStokRendah.Text = $"Stok Rendah\n{totalLowStock} item";
             }

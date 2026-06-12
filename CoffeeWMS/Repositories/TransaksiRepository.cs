@@ -11,13 +11,15 @@ namespace CoffeeWMS.Repositories
         // PENERIMAAN — menggunakan SP sp_add_incoming_transaction
         // Trigger akan otomatis: update stok + catat log
         // ====================================================================
-        public bool InsertPenerimaan(int supplierId, int productId, int quantity, int petugasId)
+        public bool InsertPenerimaan(int supplierId, int coffeeId, int categoryId, int roastLevelId, int quantity, int petugasId)
         {
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
+                    int productId = GetOrCreateProduct(conn, coffeeId, categoryId, roastLevelId);
+
                     using (var cmd = new NpgsqlCommand("CALL sp_add_incoming_transaction(@s, @p_id, @q, @p)", conn))
                     {
                         cmd.Parameters.AddWithValue("s", supplierId);
@@ -40,13 +42,15 @@ namespace CoffeeWMS.Repositories
         // PENGIRIMAN — menggunakan SP sp_add_outgoing_transaction
         // Trigger akan otomatis: cek stok, kurangi stok + catat log
         // ====================================================================
-        public bool InsertPengiriman(int destinationId, int productId, int quantity, int petugasId)
+        public bool InsertPengiriman(int destinationId, int coffeeId, int categoryId, int roastLevelId, int quantity, int petugasId)
         {
             try
             {
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
+                    int productId = GetOrCreateProduct(conn, coffeeId, categoryId, roastLevelId);
+
                     using (var cmd = new NpgsqlCommand("CALL sp_add_outgoing_transaction(@d, @p_id, @q, @p)", conn))
                     {
                         cmd.Parameters.AddWithValue("d", destinationId);
@@ -63,6 +67,40 @@ namespace CoffeeWMS.Repositories
                 Console.WriteLine("DB Error (InsertPengiriman): " + ex.Message);
                 return false;
             }
+        }
+
+        private int GetOrCreateProduct(NpgsqlConnection conn, int coffeeId, int categoryId, int roastLevelId)
+        {
+            int productId = 0;
+            string query = "SELECT product_id FROM coffee_products WHERE coffee_id = @c AND category_id = @cat ";
+            if (roastLevelId > 0) query += "AND roast_level_id = @r ";
+            else query += "AND roast_level_id IS NULL ";
+            query += "LIMIT 1";
+
+            using (var cmd = new NpgsqlCommand(query, conn))
+            {
+                cmd.Parameters.AddWithValue("c", coffeeId);
+                cmd.Parameters.AddWithValue("cat", categoryId);
+                if (roastLevelId > 0) cmd.Parameters.AddWithValue("r", roastLevelId);
+                
+                var res = cmd.ExecuteScalar();
+                if (res != null && res != DBNull.Value) productId = Convert.ToInt32(res);
+            }
+
+            if (productId == 0)
+            {
+                string insertQuery = "INSERT INTO coffee_products (coffee_id, category_id, roast_level_id, minimum_stock) VALUES (@c, @cat, @r, 20) RETURNING product_id";
+                using (var cmd = new NpgsqlCommand(insertQuery, conn))
+                {
+                    cmd.Parameters.AddWithValue("c", coffeeId);
+                    cmd.Parameters.AddWithValue("cat", categoryId);
+                    if (roastLevelId > 0) cmd.Parameters.AddWithValue("r", roastLevelId);
+                    else cmd.Parameters.AddWithValue("r", DBNull.Value);
+                    
+                    productId = Convert.ToInt32(cmd.ExecuteScalar());
+                }
+            }
+            return productId;
         }
 
         // ====================================================================

@@ -39,6 +39,7 @@ namespace CoffeeWMS.Controllers
             _view.PopulateCoffeeTypes(_repo.GetCoffeeTypes());
             _view.PopulateCategories(_repo.GetCoffeeCategories());
             _view.PopulateOrigins(_repo.GetCoffeeOrigins());
+            _view.PopulateRoastLevels(_repo.GetRoastLevels());
         }
 
         private void OnAddSupplierRequested(object sender, Supplier e)
@@ -121,18 +122,19 @@ namespace CoffeeWMS.Controllers
             }
         }
 
-        private void OnAddCoffeeProductRequested(object sender, (int coffeeId, int categoryId, int originId, int minimumStock) data)
+        private void OnAddCoffeeProductRequested(object sender, (int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId) data)
         {
             try
             {
                 int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
 
                 _repo.AddCoffeeProduct(
-                    adminId,
-                    data.coffeeId,
-                    data.categoryId,
-                    data.originId,
-                    data.minimumStock
+                    adminId, 
+                    data.coffeeId, 
+                    data.categoryId, 
+                    data.originId, 
+                    data.minimumStock,
+                    data.roastLevelId
                 );
 
                 _view.ShowMessage("Produk Kopi berhasil ditambahkan!");

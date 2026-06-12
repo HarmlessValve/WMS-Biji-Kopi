@@ -244,7 +244,7 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_id, category_name, origin_id, origin_name, current_quantity, minimum_stock, is_active FROM vw_coffee_products ORDER BY coffee_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_id, category_name, origin_id, origin_name, roast_level_id, roast_level_name, current_quantity, minimum_stock, is_active FROM vw_coffee_products ORDER BY coffee_name", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -253,13 +253,19 @@ namespace CoffeeWMS.Repositories
                             {
                                 ProductId = reader.GetInt32(0),
                                 CoffeeName = reader.GetString(1),
+
                                 CategoryId = reader.IsDBNull(2) ? (int?)null : reader.GetInt32(2),
                                 CategoryName = reader.IsDBNull(3) ? "Tanpa Kategori" : reader.GetString(3),
+
                                 OriginId = reader.IsDBNull(4) ? (int?)null : reader.GetInt32(4),
                                 OriginName = reader.IsDBNull(5) ? "Tanpa Origin" : reader.GetString(5),
-                                CurrentQuantity = reader.GetInt32(6),
-                                MinimumStock = reader.GetInt32(7),
-                                IsActive = reader.GetBoolean(8)
+
+                                RoastLevelId = reader.IsDBNull(6) ? (int?)null : reader.GetInt32(6),
+                                RoastLevelName = reader.IsDBNull(7) ? "-" : reader.GetString(7),
+
+                                CurrentQuantity = reader.GetInt32(8),
+                                MinimumStock = reader.GetInt32(9),
+                                IsActive = reader.GetBoolean(10)
                             });
                         }
                     }
@@ -272,19 +278,32 @@ namespace CoffeeWMS.Repositories
             return list;
         }
 
-        public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, int originId, int minimumStock)
+        public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId)
         {
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_product(@admin_id, @cf, @ct, @o, @m)", conn))
+
+                using (var cmd = new NpgsqlCommand(
+                @"INSERT INTO coffee_products 
+                    (coffee_id, category_id, origin_id, roast_level_id, current_quantity, minimum_stock, last_updated, is_active)
+                VALUES 
+                    (@cf, @ct, @o, @rl, 0, @m, NOW(), true)", conn))
                 {
-                    cmd.Parameters.AddWithValue("admin_id", adminId);
                     cmd.Parameters.AddWithValue("cf", coffeeId);
                     cmd.Parameters.AddWithValue("ct", categoryId);
                     cmd.Parameters.AddWithValue("o", originId);
+                    cmd.Parameters.AddWithValue("rl", roastLevelId.HasValue ? roastLevelId.Value : (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("m", minimumStock);
+
                     cmd.ExecuteNonQuery();
+                }
+
+                using (var logCmd = new NpgsqlCommand(
+                    "INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Produk Kopi')", conn))
+                {
+                    logCmd.Parameters.AddWithValue("u", adminId);
+                    logCmd.ExecuteNonQuery();
                 }
             }
         }
@@ -333,6 +352,43 @@ namespace CoffeeWMS.Repositories
             {
                 Console.WriteLine("DB Error (GetCoffeeCategories): " + ex.Message);
             }
+            return list;
+        }
+        // ====================================================================
+        // COFFEE ORIGINS — langsung dari tabel coffee_origins
+        // ====================================================================
+        public List<RoastLevel> GetRoastLevels()
+        {
+            var list = new List<RoastLevel>();
+
+            try
+            {
+                using (var conn = DatabaseHelper.GetConnection())
+                {
+                    conn.Open();
+
+                    using (var cmd = new NpgsqlCommand(
+                        "SELECT roast_level_id, roast_level_name, description, is_active FROM roast_levels WHERE is_active = true ORDER BY roast_level_id", conn))
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new RoastLevel
+                            {
+                                RoastLevelId = reader.GetInt32(0),
+                                RoastLevelName = reader.GetString(1),
+                                Description = reader.IsDBNull(2) ? "" : reader.GetString(2),
+                                IsActive = reader.GetBoolean(3)
+                            });
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("DB Error (GetRoastLevels): " + ex.Message);
+            }
+
             return list;
         }
 
@@ -389,7 +445,7 @@ namespace CoffeeWMS.Repositories
                     cmd.ExecuteNonQuery();
                     
                     // We also need to log this if we bypassed SP. 
-                    using (var logCmd = new NpgsqlCommand("INSERT INTO logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Coffee Origin: ' || @n)", conn))
+                    using (var logCmd = new NpgsqlCommand("INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Coffee Origin: ' || @n)", conn))
                     {
                         logCmd.Parameters.AddWithValue("u", adminId);
                         logCmd.Parameters.AddWithValue("n", origin.OriginName);
@@ -410,7 +466,7 @@ namespace CoffeeWMS.Repositories
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_name, origin_name, current_quantity, minimum_stock, status FROM stock_summary", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_name, origin_name, roast_level_name, current_quantity, minimum_stock, status FROM stock_summary", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -421,9 +477,10 @@ namespace CoffeeWMS.Repositories
                                 CoffeeName = reader.GetString(1),
                                 CategoryName = reader.IsDBNull(2) ? "" : reader.GetString(2),
                                 OriginName = reader.IsDBNull(3) ? "" : reader.GetString(3),
-                                CurrentQuantity = reader.GetInt32(4),
-                                MinimumStock = reader.GetInt32(5),
-                                Status = reader.GetString(6)
+                                RoastLevelName = reader.IsDBNull(4) ? "-" : reader.GetString(4),
+                                CurrentQuantity = reader.GetInt32(5),
+                                MinimumStock = reader.GetInt32(6),
+                                Status = reader.GetString(7)
                             });
                         }
                     }
