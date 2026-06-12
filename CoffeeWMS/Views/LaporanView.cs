@@ -1,16 +1,15 @@
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Drawing;
 using System.Windows.Forms;
-using Npgsql;
-using CoffeeWMS.Data;
+using CoffeeWMS.Controllers;
+using CoffeeWMS.Models;
 
 namespace CoffeeWMS.Views
 {
     public class LaporanView : UserControl
     {
-
-
         private Label lblTitle;
         private Label lblSubtitle;
 
@@ -28,10 +27,12 @@ namespace CoffeeWMS.Views
 
         private DataGridView dgvLaporan;
 
+        private readonly LaporanController _controller = new LaporanController();
+
         public LaporanView()
         {
             InitializeComponent();
-            DateTime mulai = dtpMulai.Value.Date;
+            DateTime mulai   = dtpMulai.Value.Date;
             DateTime selesai = dtpSelesai.Value.Date;
             LoadSummary(mulai, selesai);
             LoadLaporan();
@@ -45,56 +46,56 @@ namespace CoffeeWMS.Views
 
             lblTitle = new Label
             {
-                Text = "Laporan Gudang Kopi",
-                Font = new Font("Segoe UI", 18, FontStyle.Bold),
+                Text      = "Laporan Gudang Kopi",
+                Font      = new Font("Segoe UI", 18, FontStyle.Bold),
                 ForeColor = Color.FromArgb(40, 40, 40),
-                AutoSize = true,
-                Location = new Point(25, 20)
+                AutoSize  = true,
+                Location  = new Point(25, 20)
             };
 
             lblSubtitle = new Label
             {
-                Text = "Rekap penerimaan, pengiriman, stok, stok rendah, dan log aktivitas gudang.",
-                Font = new Font("Segoe UI", 10),
+                Text      = "Rekap penerimaan, pengiriman, stok, stok rendah, dan log aktivitas gudang.",
+                Font      = new Font("Segoe UI", 10),
                 ForeColor = Color.Gray,
-                AutoSize = true,
-                Location = new Point(28, 55)
+                AutoSize  = true,
+                Location  = new Point(28, 55)
             };
 
             Label lblMulai = new Label
             {
-                Text = "Dari Tanggal",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Text     = "Dari Tanggal",
+                Font     = new Font("Segoe UI", 9, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(30, 95)
             };
 
             dtpMulai = new DateTimePicker
             {
-                Format = DateTimePickerFormat.Short,
-                Width = 130,
+                Format   = DateTimePickerFormat.Short,
+                Width    = 130,
                 Location = new Point(30, 118)
             };
 
             Label lblSelesai = new Label
             {
-                Text = "Sampai Tanggal",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Text     = "Sampai Tanggal",
+                Font     = new Font("Segoe UI", 9, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(180, 95)
             };
 
             dtpSelesai = new DateTimePicker
             {
-                Format = DateTimePickerFormat.Short,
-                Width = 130,
+                Format   = DateTimePickerFormat.Short,
+                Width    = 130,
                 Location = new Point(180, 118)
             };
 
             Label lblJenis = new Label
             {
-                Text = "Jenis Laporan",
-                Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                Text     = "Jenis Laporan",
+                Font     = new Font("Segoe UI", 9, FontStyle.Bold),
                 AutoSize = true,
                 Location = new Point(330, 95)
             };
@@ -102,8 +103,8 @@ namespace CoffeeWMS.Views
             cmbJenisLaporan = new ComboBox
             {
                 DropDownStyle = ComboBoxStyle.DropDownList,
-                Width = 190,
-                Location = new Point(330, 118)
+                Width         = 190,
+                Location      = new Point(330, 118)
             };
 
             cmbJenisLaporan.Items.AddRange(new object[]
@@ -119,103 +120,94 @@ namespace CoffeeWMS.Views
 
             btnTampilkan = new Button
             {
-                Text = "Tampilkan",
-                Width = 110,
-                Height = 32,
-                Location = new Point(540, 114),
+                Text      = "Tampilkan",
+                Width     = 110,
+                Height    = 32,
+                Location  = new Point(540, 114),
                 BackColor = Color.FromArgb(52, 152, 219),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
+                Cursor    = Cursors.Hand
             };
             btnTampilkan.FlatAppearance.BorderSize = 0;
             btnTampilkan.Click += BtnTampilkan_Click;
 
             btnRefresh = new Button
             {
-                Text = "Refresh",
-                Width = 100,
-                Height = 32,
-                Location = new Point(660, 114),
+                Text      = "Refresh",
+                Width     = 100,
+                Height    = 32,
+                Location  = new Point(660, 114),
                 BackColor = Color.FromArgb(46, 204, 113),
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
-                Cursor = Cursors.Hand
+                Cursor    = Cursors.Hand
             };
             btnRefresh.FlatAppearance.BorderSize = 0;
             btnRefresh.Click += BtnRefresh_Click;
 
             lblTotalPenerimaan = CreateSummaryCard("Penerimaan", "0 transaksi", 30, 165);
             lblTotalPengiriman = CreateSummaryCard("Pengiriman", "0 transaksi", 230, 165);
-            lblTotalStok = CreateSummaryCard("Total Stok", "0 kg", 430, 165);
-            lblStokRendah = CreateSummaryCard("Stok Rendah", "0 item", 630, 165);
+            lblTotalStok       = CreateSummaryCard("Total Stok", "0 kg", 430, 165);
+            lblStokRendah      = CreateSummaryCard("Stok Rendah", "0 item", 630, 165);
 
             dgvLaporan = new DataGridView
             {
-                Location = new Point(30, 255),
-                Size = new Size(850, 360),
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
-                BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.FixedSingle,
-                AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
-                ReadOnly = true,
-                AllowUserToAddRows = false,
+                Location              = new Point(30, 255),
+                Size                  = new Size(850, 360),
+                Anchor                = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                BackgroundColor       = Color.White,
+                BorderStyle           = BorderStyle.FixedSingle,
+                AutoSizeColumnsMode   = DataGridViewAutoSizeColumnsMode.Fill,
+                ReadOnly              = true,
+                AllowUserToAddRows    = false,
                 AllowUserToDeleteRows = false,
-                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
-                RowHeadersVisible = false
+                SelectionMode         = DataGridViewSelectionMode.FullRowSelect,
+                RowHeadersVisible     = false
             };
 
             dgvLaporan.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(41, 53, 65);
             dgvLaporan.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
-            dgvLaporan.ColumnHeadersDefaultCellStyle.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            dgvLaporan.EnableHeadersVisualStyles = false;
+            dgvLaporan.ColumnHeadersDefaultCellStyle.Font      = new Font("Segoe UI", 9, FontStyle.Bold);
+            dgvLaporan.EnableHeadersVisualStyles               = false;
 
-            dgvLaporan.DefaultCellStyle.Font = new Font("Segoe UI", 9);
-            dgvLaporan.DefaultCellStyle.SelectionBackColor = Color.FromArgb(52, 152, 219);
-            dgvLaporan.DefaultCellStyle.SelectionForeColor = Color.White;
+            dgvLaporan.DefaultCellStyle.Font                  = new Font("Segoe UI", 9);
+            dgvLaporan.DefaultCellStyle.SelectionBackColor     = Color.FromArgb(52, 152, 219);
+            dgvLaporan.DefaultCellStyle.SelectionForeColor     = Color.White;
 
-            this.Controls.Add(lblTitle);
-            this.Controls.Add(lblSubtitle);
-
-            this.Controls.Add(lblMulai);
-            this.Controls.Add(dtpMulai);
-
-            this.Controls.Add(lblSelesai);
-            this.Controls.Add(dtpSelesai);
-
-            this.Controls.Add(lblJenis);
-            this.Controls.Add(cmbJenisLaporan);
-
-            this.Controls.Add(btnTampilkan);
-            this.Controls.Add(btnRefresh);
-
-            this.Controls.Add(lblTotalPenerimaan);
-            this.Controls.Add(lblTotalPengiriman);
-            this.Controls.Add(lblTotalStok);
-            this.Controls.Add(lblStokRendah);
-
-            this.Controls.Add(dgvLaporan);
+            this.Controls.AddRange(new Control[]
+            {
+                lblTitle, lblSubtitle,
+                lblMulai, dtpMulai,
+                lblSelesai, dtpSelesai,
+                lblJenis, cmbJenisLaporan,
+                btnTampilkan, btnRefresh,
+                lblTotalPenerimaan, lblTotalPengiriman, lblTotalStok, lblStokRendah,
+                dgvLaporan
+            });
         }
 
         private Label CreateSummaryCard(string title, string value, int x, int y)
         {
-            Label card = new Label
+            return new Label
             {
-                Text = $"{title}\n{value}",
-                Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                Text      = $"{title}\n{value}",
+                Font      = new Font("Segoe UI", 10, FontStyle.Bold),
                 ForeColor = Color.White,
                 BackColor = Color.FromArgb(41, 53, 65),
                 TextAlign = ContentAlignment.MiddleCenter,
-                Location = new Point(x, y),
-                Size = new Size(170, 65)
+                Location  = new Point(x, y),
+                Size      = new Size(170, 65)
             };
-
-            return card;
         }
+
+        // =====================================================================
+        // EVENT HANDLERS
+        // =====================================================================
 
         private void BtnTampilkan_Click(object sender, EventArgs e)
         {
-            DateTime mulai = dtpMulai.Value.Date;
+            DateTime mulai   = dtpMulai.Value.Date;
             DateTime selesai = dtpSelesai.Value.Date;
             LoadSummary(mulai, selesai);
             LoadLaporan();
@@ -223,40 +215,34 @@ namespace CoffeeWMS.Views
 
         private void BtnRefresh_Click(object sender, EventArgs e)
         {
-            dtpMulai.Value = DateTime.Now.Date;
+            dtpMulai.Value  = DateTime.Now.Date;
             dtpSelesai.Value = DateTime.Now.Date;
             cmbJenisLaporan.SelectedIndex = 0;
-
-            DateTime mulai = dtpMulai.Value.Date;
-            DateTime selesai = dtpSelesai.Value.Date;
-
-            LoadSummary(mulai, selesai);
+            LoadSummary(DateTime.Now.Date, DateTime.Now.Date);
             LoadLaporan();
         }
+
+        // =====================================================================
+        // LOAD DATA — Semua memanggil _controller, tidak ada SQL di sini
+        // =====================================================================
 
         private void LoadSummary(DateTime mulai, DateTime selesai)
         {
             try
             {
-                int totalIncoming = this.GetLaporanPenerimaan(mulai, selesai).Rows.Count;
-                int totalOutgoing = this.GetLaporanPengiriman(mulai, selesai).Rows.Count;
-                int totalLowStock = this.GetLaporanStokRendah().Rows.Count;
-
-                int totalStok = this.GetTotalStok();
+                int totalIncoming = _controller.GetLaporanPenerimaan(mulai, selesai).Count;
+                int totalOutgoing = _controller.GetLaporanPengiriman(mulai, selesai).Count;
+                int totalStok     = _controller.GetTotalStok();
+                int totalLowStock = _controller.GetLaporanStokRendah().Rows.Count;
 
                 lblTotalPenerimaan.Text = $"Penerimaan Total\n{totalIncoming} transaksi";
                 lblTotalPengiriman.Text = $"Pengiriman Total\n{totalOutgoing} transaksi";
-                lblTotalStok.Text = $"Total Stok\n{totalStok} kg";
-                lblStokRendah.Text = $"Stok Rendah\n{totalLowStock} item";
+                lblTotalStok.Text       = $"Total Stok\n{totalStok} kg";
+                lblStokRendah.Text      = $"Stok Rendah\n{totalLowStock} item";
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Gagal memuat summary laporan: " + ex.Message,
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                MessageBox.Show("Gagal memuat summary laporan: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -264,291 +250,71 @@ namespace CoffeeWMS.Views
         {
             try
             {
-                DateTime mulai = dtpMulai.Value.Date;
+                DateTime mulai   = dtpMulai.Value.Date;
                 DateTime selesai = dtpSelesai.Value.Date;
 
                 if (mulai > selesai)
                 {
-                    MessageBox.Show(
-                        "Tanggal mulai tidak boleh lebih besar dari tanggal selesai.",
-                        "Validasi",
-                        MessageBoxButtons.OK,
-                        MessageBoxIcon.Warning
-                    );
+                    MessageBox.Show("Tanggal mulai tidak boleh lebih besar dari tanggal selesai.", "Validasi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
 
-                string jenisLaporan = cmbJenisLaporan.SelectedItem.ToString();
-                DataTable data = new DataTable();
+                string jenisLaporan = cmbJenisLaporan.SelectedItem?.ToString() ?? "";
 
-                if (jenisLaporan == "Penerimaan")
+                // Untuk Penerimaan & Pengiriman: map List<Model> ke DataTable agar tetap konsisten dengan grid binding
+                switch (jenisLaporan)
                 {
-                    data = this.GetLaporanPenerimaan(mulai, selesai);
-                }
-                else if (jenisLaporan == "Pengiriman")
-                {
-                    data = this.GetLaporanPengiriman(mulai, selesai);
-                }
-                else if (jenisLaporan == "Stok")
-                {
-                    data = this.GetLaporanStok();
-                }
-                else if (jenisLaporan == "Stok Rendah")
-                {
-                    data = this.GetLaporanStokRendah();
-                }
-                else if (jenisLaporan == "Log Aktivitas")
-                {
-                    data = this.GetLogAktivitas(mulai, selesai);
+                    case "Penerimaan":
+                        dgvLaporan.DataSource = _controller.GetLaporanPenerimaan(mulai, selesai);
+                        break;
+                    case "Pengiriman":
+                        dgvLaporan.DataSource = _controller.GetLaporanPengiriman(mulai, selesai);
+                        break;
+                    case "Stok":
+                        dgvLaporan.DataSource = _controller.GetLaporanStok();
+                        break;
+                    case "Stok Rendah":
+                        dgvLaporan.DataSource = _controller.GetLaporanStokRendah();
+                        break;
+                    case "Log Aktivitas":
+                        dgvLaporan.DataSource = _controller.GetLogAktivitas(mulai, selesai);
+                        break;
                 }
 
-                dgvLaporan.DataSource = data;
                 ApplyGridStyle();
             }
             catch (Exception ex)
             {
-                MessageBox.Show(
-                    "Gagal memuat laporan: " + ex.Message,
-                    "Error",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error
-                );
+                MessageBox.Show("Gagal memuat laporan: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
         private void ApplyGridStyle()
         {
-            if (dgvLaporan.Columns.Count == 0)
-                return;
+            if (dgvLaporan.Columns.Count == 0) return;
 
             dgvLaporan.ClearSelection();
 
             foreach (DataGridViewColumn col in dgvLaporan.Columns)
-            {
                 col.SortMode = DataGridViewColumnSortMode.Automatic;
-            }
 
+            // Warna baris berdasarkan kolom "Status" jika ada (untuk Stok)
             if (dgvLaporan.Columns.Contains("Status"))
             {
                 foreach (DataGridViewRow row in dgvLaporan.Rows)
                 {
-                    object statusValue = row.Cells["Status"].Value;
-
-                    if (statusValue != null && statusValue.ToString() == "LOW")
+                    var statusValue = row.Cells["Status"].Value?.ToString();
+                    if (statusValue == "LOW")
                     {
                         row.DefaultCellStyle.BackColor = Color.FromArgb(255, 235, 238);
                         row.DefaultCellStyle.ForeColor = Color.FromArgb(183, 28, 28);
                     }
-                    else if (statusValue != null && statusValue.ToString() == "SAFE")
+                    else if (statusValue == "SAFE")
                     {
                         row.DefaultCellStyle.BackColor = Color.FromArgb(232, 245, 233);
                         row.DefaultCellStyle.ForeColor = Color.FromArgb(27, 94, 32);
                     }
                 }
-            }
-        }
-
-        private DataTable GetLaporanPenerimaan(DateTime startDate, DateTime endDate)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    string query = @"
-                        SELECT 
-                            tanggal AS ""Tanggal"",
-                            supplier AS ""Supplier"",
-                            jenis_kopi AS ""Jenis Kopi"",
-                            jumlah AS ""Jumlah (Kg)"",
-                            petugas AS ""Petugas""
-                        FROM vw_incoming_transactions
-                        WHERE tanggal >= @startDate 
-                          AND tanggal < @endDate
-                        ORDER BY tanggal DESC;
-                    ";
-
-                    using (var cmd = new NpgsqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("startDate", startDate.Date);
-                        cmd.Parameters.AddWithValue("endDate", endDate.Date.AddDays(1));
-
-                        using (var adapter = new NpgsqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetLaporanPenerimaan): " + ex.Message);
-            }
-            return dt;
-        }
-
-        private DataTable GetLaporanPengiriman(DateTime startDate, DateTime endDate)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    string query = @"
-                        SELECT 
-                            tanggal AS ""Tanggal"",
-                            destinasi AS ""Destinasi"",
-                            jenis_kopi AS ""Jenis Kopi"",
-                            jumlah AS ""Jumlah (Kg)"",
-                            petugas AS ""Petugas""
-                        FROM vw_outgoing_transactions
-                        WHERE tanggal >= @startDate 
-                          AND tanggal < @endDate
-                        ORDER BY tanggal DESC;
-                    ";
-
-                    using (var cmd = new NpgsqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("startDate", startDate.Date);
-                        cmd.Parameters.AddWithValue("endDate", endDate.Date.AddDays(1));
-
-                        using (var adapter = new NpgsqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetLaporanPengiriman): " + ex.Message);
-            }
-            return dt;
-        }
-
-        private DataTable GetLaporanStok()
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    string query = @"
-                        SELECT
-                            coffee_id AS ""ID Kopi"",
-                            coffee_name AS ""Nama Kopi"",
-                            category_name AS ""Kategori"",
-                            COALESCE(roast_level_name, '-') AS ""Roast Level"",
-                            current_quantity AS ""Stok Saat Ini"",
-                            minimum_stock AS ""Minimum Stok"",
-                            status AS ""Status""
-                        FROM stock_summary
-                        ORDER BY coffee_name;
-                    ";
-
-                    using (var adapter = new NpgsqlDataAdapter(query, conn))
-                    {
-                        adapter.Fill(dt);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetLaporanStok): " + ex.Message);
-            }
-            return dt;
-        }
-
-        private DataTable GetLaporanStokRendah()
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    string query = @"
-                        SELECT
-                            coffee_id AS ""ID Kopi"",
-                            coffee_name AS ""Nama Kopi"",
-                            category_name AS ""Kategori"",
-                            COALESCE(roast_level_name, '-') AS ""Roast Level"",
-                            current_quantity AS ""Stok Saat Ini"",
-                            minimum_stock AS ""Minimum Stok"",
-                            minimum_stock - current_quantity AS ""Kekurangan""
-                        FROM stock_summary
-                        WHERE status = 'LOW'
-                        ORDER BY coffee_name;
-                    ";
-
-                    using (var adapter = new NpgsqlDataAdapter(query, conn))
-                    {
-                        adapter.Fill(dt);
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetLaporanStokRendah): " + ex.Message);
-            }
-            return dt;
-        }
-
-        private DataTable GetLogAktivitas(DateTime startDate, DateTime endDate)
-        {
-            DataTable dt = new DataTable();
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    string query = @"
-                        SELECT
-                            log_time AS ""Waktu"",
-                            actor AS ""Actor"",
-                            action AS ""Aksi"",
-                            description AS ""Deskripsi""
-                        FROM vw_logs
-                        WHERE log_time >= @startDate 
-                          AND log_time < @endDate
-                        ORDER BY log_time DESC;
-                    ";
-
-                    using (var cmd = new NpgsqlCommand(query, conn))
-                    {
-                        cmd.Parameters.AddWithValue("startDate", startDate.Date);
-                        cmd.Parameters.AddWithValue("endDate", endDate.Date.AddDays(1));
-
-                        using (var adapter = new NpgsqlDataAdapter(cmd))
-                        {
-                            adapter.Fill(dt);
-                        }
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetLogAktivitas): " + ex.Message);
-            }
-            return dt;
-        }
-
-        private int GetTotalStok()
-        {
-            try
-            {
-                using (var conn = DatabaseHelper.GetConnection())
-                {
-                    conn.Open();
-                    string query = "SELECT COALESCE(SUM(current_quantity), 0) FROM stock_summary;";
-                    using (var cmd = new NpgsqlCommand(query, conn))
-                    {
-                        return Convert.ToInt32(cmd.ExecuteScalar());
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("DB Error (GetTotalStok): " + ex.Message);
-                return 0;
             }
         }
     }
