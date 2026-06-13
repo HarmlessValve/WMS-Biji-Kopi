@@ -180,6 +180,12 @@ namespace CoffeeWMS.Views
                 }
             }
 
+            DialogResult dialogResult = MessageBox.Show($"Apakah Anda yakin jumlah berat yang dimasukkan adalah {jumlah} Kg?", "Konfirmasi Jumlah", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dialogResult != DialogResult.Yes)
+            {
+                return;
+            }
+
             bool sukses = _controller.SimpanPenerimaan(supplierId, coffeeId, categoryId, originId, roastLevelId, jumlah, petugasId);
 
             if (sukses)
