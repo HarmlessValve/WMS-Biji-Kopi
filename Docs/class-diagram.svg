@@ -1,0 +1,92 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1320" viewBox="0 0 1800 1320">
+  <defs>
+    <style>
+      .bg{fill:#f8fafc}
+      .title{font:700 34px Arial,sans-serif;fill:#111827}
+      .subtitle{font:400 18px Arial,sans-serif;fill:#475569}
+      .group{fill:#ffffff;stroke:#cbd5e1;stroke-width:2;rx:10}
+      .groupTitle{font:700 22px Arial,sans-serif;fill:#0f172a}
+      .box{fill:#fff;stroke:#334155;stroke-width:1.6;rx:6}
+      .boxModel{fill:#eef6ff}
+      .boxView{fill:#ecfdf5}
+      .boxController{fill:#fff7ed}
+      .boxData{fill:#f5f3ff}
+      .className{font:700 15px Arial,sans-serif;fill:#111827}
+      .text{font:12px Consolas,monospace;fill:#1f2937}
+      .rel{stroke:#475569;stroke-width:2;fill:none;marker-end:url(#arrow)}
+      .inherit{stroke:#0f766e;stroke-width:2.2;fill:none;marker-end:url(#triangle)}
+      .label{font:12px Arial,sans-serif;fill:#334155}
+    </style>
+    <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L9,3 L0,6 Z" fill="#475569"/>
+    </marker>
+    <marker id="triangle" markerWidth="12" markerHeight="12" refX="11" refY="5" orient="auto" markerUnits="strokeWidth">
+      <path d="M0,0 L10,5 L0,10 Z" fill="#f8fafc" stroke="#0f766e" stroke-width="1.4"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" x="0" y="0" width="1800" height="1320"/>
+  <text class="title" x="50" y="58">CoffeeWMS - OOP Class Diagram</text>
+  <text class="subtitle" x="50" y="88">Ringkasan class, atribut utama, method utama, dan relasi MVC/Model pada folder CoffeeWMS.</text>
+
+  <rect class="group" x="40" y="125" width="520" height="1015"/>
+  <text class="groupTitle" x="65" y="162">Models</text>
+
+  <rect class="box boxModel" x="65" y="185" width="220" height="132"/><text class="className" x="80" y="207">User</text><line x1="65" y1="216" x2="285" y2="216" stroke="#94a3b8"/><text class="text" x="80" y="235">+ UserId, Username</text><text class="text" x="80" y="252">+ Password, IsActive</text><text class="text" x="80" y="269">+ CreatedAt</text><text class="text" x="80" y="286">+ RolesString</text><text class="text" x="80" y="303">+ Roles: List&lt;Role&gt;</text>
+  <rect class="box boxModel" x="315" y="185" width="210" height="98"/><text class="className" x="330" y="207">Role</text><line x1="315" y1="216" x2="525" y2="216" stroke="#94a3b8"/><text class="text" x="330" y="235">+ RoleId</text><text class="text" x="330" y="252">+ RoleName</text><text class="text" x="330" y="269">+ Description</text>
+  <rect class="box boxModel" x="315" y="305" width="210" height="115"/><text class="className" x="330" y="327">Session</text><line x1="315" y1="336" x2="525" y2="336" stroke="#94a3b8"/><text class="text" x="330" y="355">+ CurrentUser</text><text class="text" x="330" y="372">+ IsAdmin</text><text class="text" x="330" y="389">+ IsManager</text><text class="text" x="330" y="406">+ IsPetugas</text>
+  <rect class="box boxModel" x="65" y="340" width="220" height="115"/><text class="className" x="80" y="362">Supplier</text><line x1="65" y1="371" x2="285" y2="371" stroke="#94a3b8"/><text class="text" x="80" y="390">+ SupplierId</text><text class="text" x="80" y="407">+ CompanyName</text><text class="text" x="80" y="424">+ Address, Phone</text><text class="text" x="80" y="441">+ IsActive</text>
+  <rect class="box boxModel" x="315" y="445" width="210" height="98"/><text class="className" x="330" y="467">Destination</text><line x1="315" y1="476" x2="525" y2="476" stroke="#94a3b8"/><text class="text" x="330" y="495">+ DestinationId</text><text class="text" x="330" y="512">+ DestinationName</text><text class="text" x="330" y="529">+ Address, IsActive</text>
+  <rect class="box boxModel" x="65" y="480" width="220" height="166"/><text class="className" x="80" y="502">CoffeeProduct</text><line x1="65" y1="511" x2="285" y2="511" stroke="#94a3b8"/><text class="text" x="80" y="530">+ ProductId</text><text class="text" x="80" y="547">+ CoffeeName</text><text class="text" x="80" y="564">+ CategoryId/Name</text><text class="text" x="80" y="581">+ OriginId/Name</text><text class="text" x="80" y="598">+ CurrentQuantity</text><text class="text" x="80" y="615">+ MinimumStock</text><text class="text" x="80" y="632">+ RoastLevelId/Name</text>
+  <rect class="box boxModel" x="315" y="565" width="210" height="98"/><text class="className" x="330" y="587">CoffeeType</text><line x1="315" y1="596" x2="525" y2="596" stroke="#94a3b8"/><text class="text" x="330" y="615">+ CoffeeId</text><text class="text" x="330" y="632">+ CoffeeName</text><text class="text" x="330" y="649">+ IsActive</text>
+  <rect class="box boxModel" x="65" y="675" width="220" height="98"/><text class="className" x="80" y="697">CoffeeCategory</text><line x1="65" y1="706" x2="285" y2="706" stroke="#94a3b8"/><text class="text" x="80" y="725">+ CategoryId</text><text class="text" x="80" y="742">+ CategoryName</text><text class="text" x="80" y="759">+ Description</text>
+  <rect class="box boxModel" x="315" y="690" width="210" height="115"/><text class="className" x="330" y="712">CoffeeOrigin</text><line x1="315" y1="721" x2="525" y2="721" stroke="#94a3b8"/><text class="text" x="330" y="740">+ OriginId</text><text class="text" x="330" y="757">+ OriginName</text><text class="text" x="330" y="774">+ Region</text><text class="text" x="330" y="791">+ Description, IsActive</text>
+  <rect class="box boxModel" x="65" y="805" width="220" height="115"/><text class="className" x="80" y="827">RoastLevel</text><line x1="65" y1="836" x2="285" y2="836" stroke="#94a3b8"/><text class="text" x="80" y="855">+ RoastLevelId</text><text class="text" x="80" y="872">+ RoastLevelName</text><text class="text" x="80" y="889">+ Description</text><text class="text" x="80" y="906">+ IsActive</text>
+  <rect class="box boxModel" x="315" y="835" width="210" height="98"/><text class="className" x="330" y="857">LogEntry</text><line x1="315" y1="866" x2="525" y2="866" stroke="#94a3b8"/><text class="text" x="330" y="885">+ LogId, Actor</text><text class="text" x="330" y="902">+ Action, Description</text><text class="text" x="330" y="919">+ LogTime</text>
+  <rect class="box boxModel" x="65" y="950" width="220" height="132"/><text class="className" x="80" y="972">Report/Helper Models</text><line x1="65" y1="981" x2="285" y2="981" stroke="#94a3b8"/><text class="text" x="80" y="1000">DropdownItem</text><text class="text" x="80" y="1017">LaporanPenerimaanItem</text><text class="text" x="80" y="1034">LaporanPengirimanItem</text><text class="text" x="80" y="1051">StockSummary</text><text class="text" x="80" y="1068">DashboardSummary</text>
+
+  <rect class="group" x="610" y="125" width="520" height="1015"/>
+  <text class="groupTitle" x="635" y="162">Views</text>
+  <rect class="box boxView" x="635" y="185" width="220" height="115"/><text class="className" x="650" y="207">BaseForm : Form</text><line x1="635" y1="216" x2="855" y2="216" stroke="#94a3b8"/><text class="text" x="650" y="235">+ pnlSidebar/Header</text><text class="text" x="650" y="252">+ pnlContent</text><text class="text" x="650" y="269">+ LoadView()</text>
+  <rect class="box boxView" x="885" y="185" width="210" height="115"/><text class="className" x="900" y="207">MainForm : BaseForm</text><line x1="885" y1="216" x2="1095" y2="216" stroke="#94a3b8"/><text class="text" x="900" y="235">+ ViewLoaded</text><text class="text" x="900" y="252">+ LogoutRequested</text><text class="text" x="900" y="269">+ ShowDashboard()</text><text class="text" x="900" y="286">+ ShowDataManagement()</text>
+  <rect class="box boxView" x="635" y="330" width="220" height="115"/><text class="className" x="650" y="352">LoginForm : Form</text><line x1="635" y1="361" x2="855" y2="361" stroke="#94a3b8"/><text class="text" x="650" y="380">+ Username, Password</text><text class="text" x="650" y="397">+ IsAuthenticated</text><text class="text" x="650" y="414">+ LoginAttempted</text><text class="text" x="650" y="431">+ ShowError()</text>
+  <rect class="box boxView" x="885" y="330" width="210" height="132"/><text class="className" x="900" y="352">UserManagementForm</text><line x1="885" y1="361" x2="1095" y2="361" stroke="#94a3b8"/><text class="text" x="900" y="380">+ ShowInactive</text><text class="text" x="900" y="397">+ LoadUsersRequested</text><text class="text" x="900" y="414">+ SaveUserRequested</text><text class="text" x="900" y="431">+ DisplayUsers()</text><text class="text" x="900" y="448">+ SetAvailableRoles()</text>
+  <rect class="box boxView" x="635" y="485" width="220" height="149"/><text class="className" x="650" y="507">DataManagementForm</text><line x1="635" y1="516" x2="855" y2="516" stroke="#94a3b8"/><text class="text" x="650" y="535">+ ShowInactive*</text><text class="text" x="650" y="552">+ LoadDataRequested</text><text class="text" x="650" y="569">+ SaveSupplierRequested</text><text class="text" x="650" y="586">+ SaveDestinationRequested</text><text class="text" x="650" y="603">+ AddCoffeeProductReq.</text><text class="text" x="650" y="620">+ Display*()</text>
+  <rect class="box boxView" x="885" y="500" width="210" height="115"/><text class="className" x="900" y="522">AdminDashboardForm</text><line x1="885" y1="531" x2="1095" y2="531" stroke="#94a3b8"/><text class="text" x="900" y="550">+ LoadDashboardReq.</text><text class="text" x="900" y="567">+ DisplayLogs()</text><text class="text" x="900" y="584">+ DisplaySuppliers()</text><text class="text" x="900" y="601">+ DisplayDestinations()</text>
+  <rect class="box boxView" x="635" y="665" width="220" height="115"/><text class="className" x="650" y="687">PetugasDashboardForm</text><line x1="635" y1="696" x2="855" y2="696" stroke="#94a3b8"/><text class="text" x="650" y="715">+ LoadDashboardReq.</text><text class="text" x="650" y="732">+ DisplaySummary()</text><text class="text" x="650" y="749">+ DisplayStokKopi()</text>
+  <rect class="box boxView" x="885" y="650" width="210" height="132"/><text class="className" x="900" y="672">PenerimaanView</text><line x1="885" y1="681" x2="1095" y2="681" stroke="#94a3b8"/><text class="text" x="900" y="700">- _controller</text><text class="text" x="900" y="717">- LoadInitialData()</text><text class="text" x="900" y="734">- LoadKategori()</text><text class="text" x="900" y="751">- BtnSimpan_Click()</text><text class="text" x="900" y="768">- RefreshGrid()</text>
+  <rect class="box boxView" x="635" y="810" width="220" height="132"/><text class="className" x="650" y="832">PengirimanView</text><line x1="635" y1="841" x2="855" y2="841" stroke="#94a3b8"/><text class="text" x="650" y="860">- _controller</text><text class="text" x="650" y="877">- LoadInitialData()</text><text class="text" x="650" y="894">- LoadKategori()</text><text class="text" x="650" y="911">- BtnSimpan_Click()</text><text class="text" x="650" y="928">- RefreshGrid()</text>
+  <rect class="box boxView" x="885" y="815" width="210" height="115"/><text class="className" x="900" y="837">LaporanView</text><line x1="885" y1="846" x2="1095" y2="846" stroke="#94a3b8"/><text class="text" x="900" y="865">- _controller</text><text class="text" x="900" y="882">- LoadSummary()</text><text class="text" x="900" y="899">- LoadLaporan()</text><text class="text" x="900" y="916">- ApplyGridStyle()</text>
+  <rect class="box boxView" x="760" y="975" width="220" height="81"/><text class="className" x="775" y="997">PrimaryButton : Button</text><line x1="760" y1="1006" x2="980" y2="1006" stroke="#94a3b8"/><text class="text" x="775" y="1025">+ OnMouseEnter()</text><text class="text" x="775" y="1042">+ OnMouseLeave()</text>
+
+  <rect class="group" x="1180" y="125" width="580" height="1015"/>
+  <text class="groupTitle" x="1205" y="162">Controllers &amp; Data</text>
+  <rect class="box boxController" x="1205" y="185" width="245" height="98"/><text class="className" x="1220" y="207">LoginController</text><line x1="1205" y1="216" x2="1450" y2="216" stroke="#94a3b8"/><text class="text" x="1220" y="235">- _view: LoginForm</text><text class="text" x="1220" y="252">- OnLoginAttempted()</text>
+  <rect class="box boxController" x="1485" y="185" width="245" height="98"/><text class="className" x="1500" y="207">MainController</text><line x1="1485" y1="216" x2="1730" y2="216" stroke="#94a3b8"/><text class="text" x="1500" y="235">- _view: MainForm</text><text class="text" x="1500" y="252">- OnViewLoaded()</text><text class="text" x="1500" y="269">- OnLogoutRequested()</text>
+  <rect class="box boxController" x="1205" y="320" width="245" height="149"/><text class="className" x="1220" y="342">UserManagementController</text><line x1="1205" y1="351" x2="1450" y2="351" stroke="#94a3b8"/><text class="text" x="1220" y="370">- _view</text><text class="text" x="1220" y="387">- GetAllUsers()</text><text class="text" x="1220" y="404">- GetAllRoles()</text><text class="text" x="1220" y="421">- AddUser()</text><text class="text" x="1220" y="438">- UpdateUser()</text><text class="text" x="1220" y="455">- SoftDeleteUser()</text>
+  <rect class="box boxController" x="1485" y="320" width="245" height="166"/><text class="className" x="1500" y="342">DataManagementController</text><line x1="1485" y1="351" x2="1730" y2="351" stroke="#94a3b8"/><text class="text" x="1500" y="370">- _view</text><text class="text" x="1500" y="387">+ GetSuppliers()</text><text class="text" x="1500" y="404">+ GetDestinations()</text><text class="text" x="1500" y="421">+ GetCoffeeProducts()</text><text class="text" x="1500" y="438">+ Add/Update/Delete*</text><text class="text" x="1500" y="455">+ GetCategories/Origins</text><text class="text" x="1500" y="472">+ GetRoastLevels()</text>
+  <rect class="box boxController" x="1205" y="510" width="245" height="115"/><text class="className" x="1220" y="532">AdminDashboardController</text><line x1="1205" y1="541" x2="1450" y2="541" stroke="#94a3b8"/><text class="text" x="1220" y="560">- _view</text><text class="text" x="1220" y="577">- GetLogs()</text><text class="text" x="1220" y="594">- GetSuppliers()</text><text class="text" x="1220" y="611">- GetDestinations()</text>
+  <rect class="box boxController" x="1485" y="525" width="245" height="98"/><text class="className" x="1500" y="547">PetugasDashboardController</text><line x1="1485" y1="556" x2="1730" y2="556" stroke="#94a3b8"/><text class="text" x="1500" y="575">- _view</text><text class="text" x="1500" y="592">- LoadSummary()</text><text class="text" x="1500" y="609">- LoadStokKopi()</text>
+  <rect class="box boxController" x="1205" y="660" width="245" height="115"/><text class="className" x="1220" y="682">PenerimaanController</text><line x1="1205" y1="691" x2="1450" y2="691" stroke="#94a3b8"/><text class="text" x="1220" y="710">+ GetSuppliers()</text><text class="text" x="1220" y="727">+ GetCascading*()</text><text class="text" x="1220" y="744">+ GetDataPenerimaan()</text><text class="text" x="1220" y="761">+ SimpanPenerimaan()</text>
+  <rect class="box boxController" x="1485" y="660" width="245" height="115"/><text class="className" x="1500" y="682">PengirimanController</text><line x1="1485" y1="691" x2="1730" y2="691" stroke="#94a3b8"/><text class="text" x="1500" y="710">+ GetDestinations()</text><text class="text" x="1500" y="727">+ GetCascading*()</text><text class="text" x="1500" y="744">+ GetDataPengiriman()</text><text class="text" x="1500" y="761">+ SimpanPengiriman()</text>
+  <rect class="box boxController" x="1205" y="810" width="245" height="132"/><text class="className" x="1220" y="832">LaporanController</text><line x1="1205" y1="841" x2="1450" y2="841" stroke="#94a3b8"/><text class="text" x="1220" y="860">+ GetLaporanPenerimaan()</text><text class="text" x="1220" y="877">+ GetLaporanPengiriman()</text><text class="text" x="1220" y="894">+ GetLaporanStok()</text><text class="text" x="1220" y="911">+ GetLogAktivitas()</text><text class="text" x="1220" y="928">+ GetSummaryStats()</text>
+  <rect class="box boxData" x="1485" y="835" width="245" height="81"/><text class="className" x="1500" y="857">DatabaseHelper</text><line x1="1485" y1="866" x2="1730" y2="866" stroke="#94a3b8"/><text class="text" x="1500" y="885">- ConnectionString</text><text class="text" x="1500" y="902">+ GetConnection()</text>
+
+  <path class="rel" d="M285 250 C300 240,300 240,315 235"/><text class="label" x="292" y="225">has many</text>
+  <path class="rel" d="M315 350 C300 330,300 310,285 285"/><text class="label" x="288" y="342">current user</text>
+  <path class="inherit" d="M855 240 L885 240"/>
+  <path class="rel" d="M855 385 C990 320,1080 265,1205 235"/>
+  <path class="rel" d="M1095 240 C1240 230,1340 230,1485 235"/>
+  <path class="rel" d="M1095 395 C1135 395,1165 395,1205 395"/>
+  <path class="rel" d="M855 560 C1070 500,1280 420,1485 405"/>
+  <path class="rel" d="M1095 555 C1135 560,1165 565,1205 565"/>
+  <path class="rel" d="M855 720 C1080 650,1270 575,1485 575"/>
+  <path class="rel" d="M1095 715 C1135 715,1165 715,1205 715"/>
+  <path class="rel" d="M855 875 C1090 810,1260 720,1485 715"/>
+  <path class="rel" d="M1095 875 C1135 875,1165 875,1205 875"/>
+  <path class="rel" d="M1450 875 C1465 875,1470 875,1485 875"/>
+  <path class="rel" d="M1450 235 C1490 320,1510 700,1485 875"/>
+  <path class="rel" d="M1450 395 C1490 460,1515 710,1485 875"/>
+  <path class="rel" d="M1730 405 C1765 520,1765 760,1730 875"/>
+  <text class="label" x="1190" y="1035">Controller memakai model dan DatabaseHelper untuk query PostgreSQL, lalu View menampilkan data melalui event/method display.</text>
+</svg>
