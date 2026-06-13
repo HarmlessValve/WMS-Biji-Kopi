@@ -201,13 +201,12 @@ SELECT
     COALESCE(rl.roast_level_name, '-') AS roast_level_name,
     COALESCE(cp.current_quantity, 0) AS current_quantity,
     cp.minimum_stock,
-    ct.is_active
+    cp.is_active
 FROM coffee_products cp
 LEFT JOIN coffee_types ct      ON cp.coffee_id = ct.coffee_id
 LEFT JOIN coffee_categories cc ON cp.category_id = cc.category_id
 LEFT JOIN coffee_origins co    ON cp.origin_id = co.origin_id
 LEFT JOIN roast_levels rl      ON cp.roast_level_id = rl.roast_level_id
-WHERE ct.is_active = true AND cp.is_active = true
 ORDER BY ct.coffee_name;
 
 -- 3g. View: Transaksi masuk (join supplier + kopi + petugas)
