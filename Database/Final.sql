@@ -22,6 +22,13 @@ DROP FUNCTION IF EXISTS fn_update_stock_on_incoming()    CASCADE;
 DROP FUNCTION IF EXISTS fn_get_stock_by_product(INT)     CASCADE;
 DROP FUNCTION IF EXISTS fn_is_stock_sufficient(INT, INT) CASCADE;
 DROP FUNCTION IF EXISTS fn_get_low_stock_items()         CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_jenis_kopi()    CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_kategori(INT)   CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_origin(INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_roast_level(INT, INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_or_create_product(INT, INT, INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_laporan_penerimaan(DATE, DATE) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_laporan_pengiriman(DATE, DATE) CASCADE;
 
 DROP PROCEDURE IF EXISTS sp_add_user(INT, VARCHAR, VARCHAR, INT[]);
 DROP PROCEDURE IF EXISTS sp_update_user(INT, INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
