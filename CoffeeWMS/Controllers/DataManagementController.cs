@@ -25,6 +25,7 @@ namespace CoffeeWMS.Controllers
             _view.DeleteDestinationRequested += OnDeleteDestinationRequested;
 
             _view.AddCoffeeProductRequested += OnAddCoffeeProductRequested;
+            _view.UpdateCoffeeProductRequested += OnUpdateCoffeeProductRequested;
             _view.DeleteCoffeeProductRequested += OnDeleteCoffeeProductRequested;
 
             _view.AddCoffeeOriginRequested += OnAddCoffeeOriginRequested;
@@ -34,7 +35,7 @@ namespace CoffeeWMS.Controllers
         {
             _view.DisplaySuppliers(GetSuppliers(_view.ShowInactiveSupplier));
             _view.DisplayDestinations(GetDestinations(_view.ShowInactiveDestination));
-            _view.DisplayCoffeeProducts(GetCoffeeProducts());
+            _view.DisplayCoffeeProducts(GetCoffeeProducts(_view.ShowInactiveProduct));
 
             _view.PopulateCoffeeTypes(GetCoffeeTypes());
             _view.PopulateCategories(GetCoffeeCategories());
@@ -47,6 +48,12 @@ namespace CoffeeWMS.Controllers
             if (string.IsNullOrWhiteSpace(e.CompanyName))
             {
                 _view.ShowMessage("Nama Perusahaan (Supplier) wajib diisi!", true);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(e.Address))
+            {
+                _view.ShowMessage("Alamat harus diisi!", true);
                 return;
             }
 
@@ -91,6 +98,12 @@ namespace CoffeeWMS.Controllers
             if (string.IsNullOrWhiteSpace(e.DestinationName))
             {
                 _view.ShowMessage("Nama Destinasi wajib diisi!", true);
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(e.Address))
+            {
+                _view.ShowMessage("Alamat harus diisi!", true);
                 return;
             }
 
@@ -142,6 +155,21 @@ namespace CoffeeWMS.Controllers
             catch (Exception ex)
             {
                 _view.ShowMessage("Gagal menambah Produk Kopi: kemungkinan kombinasi sudah ada atau error lain. " + ex.Message, true);
+            }
+        }
+
+        private void OnUpdateCoffeeProductRequested(object sender, (int productId, int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId, bool isActive) data)
+        {
+            try
+            {
+                int adminId = CoffeeWMS.Models.Session.CurrentUser?.UserId ?? 1;
+                UpdateCoffeeProduct(adminId, data.productId, data.coffeeId, data.categoryId, data.originId, data.minimumStock, data.roastLevelId, data.isActive);
+                _view.ShowMessage("Produk Kopi berhasil diupdate!");
+                OnLoadDataRequested(this, EventArgs.Empty);
+            }
+            catch (Exception ex)
+            {
+                _view.ShowMessage("Gagal mengupdate Produk Kopi: " + ex.Message, true);
             }
         }
 
@@ -364,7 +392,7 @@ namespace CoffeeWMS.Controllers
             return list;
         }
 
-        public List<CoffeeProduct> GetCoffeeProducts()
+        public List<CoffeeProduct> GetCoffeeProducts(bool showInactive = false)
         {
             var list = new List<CoffeeProduct>();
             try
@@ -372,7 +400,9 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT product_id, coffee_name, category_id, category_name, origin_id, origin_name, roast_level_id, roast_level_name, current_quantity, minimum_stock, is_active FROM vw_coffee_products ORDER BY coffee_name", conn))
+                    string filter = showInactive ? "WHERE is_active = false" : "WHERE is_active = true";
+                    string query = $"SELECT product_id, coffee_name, category_id, category_name, origin_id, origin_name, roast_level_id, roast_level_name, current_quantity, minimum_stock, is_active FROM vw_coffee_products {filter} ORDER BY coffee_name";
+                    using (var cmd = new NpgsqlCommand(query, conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -397,6 +427,33 @@ namespace CoffeeWMS.Controllers
             }
             catch (Exception ex) { Console.WriteLine(ex.Message); }
             return list;
+        }
+
+        public void UpdateCoffeeProduct(int adminId, int productId, int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId, bool isActive)
+        {
+            using (var conn = DatabaseHelper.GetConnection())
+            {
+                conn.Open();
+                using (var cmd = new NpgsqlCommand(
+                    "UPDATE coffee_products SET coffee_id=@cf, category_id=@ct, origin_id=@o, roast_level_id=@rl, minimum_stock=@m, is_active=@active, last_updated=NOW() WHERE product_id=@pid", conn))
+                {
+                    cmd.Parameters.AddWithValue("cf", coffeeId);
+                    cmd.Parameters.AddWithValue("ct", categoryId);
+                    cmd.Parameters.AddWithValue("o", originId);
+                    cmd.Parameters.AddWithValue("rl", roastLevelId.HasValue ? roastLevelId.Value : (object)DBNull.Value);
+                    cmd.Parameters.AddWithValue("m", minimumStock);
+                    cmd.Parameters.AddWithValue("active", isActive);
+                    cmd.Parameters.AddWithValue("pid", productId);
+                    cmd.ExecuteNonQuery();
+                }
+
+                using (var logCmd = new NpgsqlCommand("INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'UPDATE', 'Update Produk Kopi ID: ' || @pid)", conn))
+                {
+                    logCmd.Parameters.AddWithValue("u", adminId);
+                    logCmd.Parameters.AddWithValue("pid", productId);
+                    logCmd.ExecuteNonQuery();
+                }
+            }
         }
 
         public void AddCoffeeProduct(int adminId, int coffeeId, int categoryId, int originId, int minimumStock, int? roastLevelId)

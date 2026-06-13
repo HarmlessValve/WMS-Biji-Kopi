@@ -22,6 +22,13 @@ DROP FUNCTION IF EXISTS fn_update_stock_on_incoming()    CASCADE;
 DROP FUNCTION IF EXISTS fn_get_stock_by_product(INT)     CASCADE;
 DROP FUNCTION IF EXISTS fn_is_stock_sufficient(INT, INT) CASCADE;
 DROP FUNCTION IF EXISTS fn_get_low_stock_items()         CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_jenis_kopi()    CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_kategori(INT)   CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_origin(INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_cascading_roast_level(INT, INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_or_create_product(INT, INT, INT, INT) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_laporan_penerimaan(DATE, DATE) CASCADE;
+DROP FUNCTION IF EXISTS fn_get_laporan_pengiriman(DATE, DATE) CASCADE;
 
 DROP PROCEDURE IF EXISTS sp_add_user(INT, VARCHAR, VARCHAR, INT[]);
 DROP PROCEDURE IF EXISTS sp_update_user(INT, INT, VARCHAR, VARCHAR, BOOLEAN, INT[]);
@@ -500,13 +507,12 @@ SELECT
     COALESCE(rl.roast_level_name, '-')              AS roast_level_name,
     COALESCE(cp.current_quantity, 0)                AS current_quantity,
     cp.minimum_stock,
-    ct.is_active
+    cp.is_active
 FROM coffee_products cp
 LEFT JOIN coffee_types      ct ON cp.coffee_id      = ct.coffee_id
 LEFT JOIN coffee_categories cc ON cp.category_id    = cc.category_id
 LEFT JOIN coffee_origins    co ON cp.origin_id      = co.origin_id
 LEFT JOIN roast_levels      rl ON cp.roast_level_id = rl.roast_level_id
-WHERE ct.is_active = true AND cp.is_active = true
 ORDER BY ct.coffee_name;
 
 -- 5g. Transaksi Masuk
@@ -1032,7 +1038,7 @@ CREATE OR REPLACE FUNCTION fn_get_laporan_penerimaan(p_start_date DATE, p_end_da
 RETURNS TABLE (
     "Tanggal" TIMESTAMP,
     "Supplier" VARCHAR,
-    "JenisKopi" VARCHAR,
+    "JenisKopi" TEXT,
     "Jumlah" INT,
     "Petugas" VARCHAR
 ) AS $$
@@ -1040,10 +1046,10 @@ BEGIN
     RETURN QUERY
     SELECT 
         tanggal AS "Tanggal",
-        supplier AS "Supplier",
-        jenis_kopi AS "JenisKopi",
+        supplier::VARCHAR AS "Supplier",
+        jenis_kopi::TEXT AS "JenisKopi",
         jumlah AS "Jumlah",
-        petugas AS "Petugas"
+        petugas::VARCHAR AS "Petugas"
     FROM vw_incoming_transactions
     WHERE tanggal >= p_start_date AND tanggal < p_end_date
     ORDER BY tanggal DESC;
@@ -1054,7 +1060,7 @@ CREATE OR REPLACE FUNCTION fn_get_laporan_pengiriman(p_start_date DATE, p_end_da
 RETURNS TABLE (
     "Tanggal" TIMESTAMP,
     "Destinasi" VARCHAR,
-    "JenisKopi" VARCHAR,
+    "JenisKopi" TEXT,
     "Jumlah" INT,
     "Petugas" VARCHAR
 ) AS $$
@@ -1062,10 +1068,10 @@ BEGIN
     RETURN QUERY
     SELECT 
         tanggal AS "Tanggal",
-        destinasi AS "Destinasi",
-        jenis_kopi AS "JenisKopi",
+        destinasi::VARCHAR AS "Destinasi",
+        jenis_kopi::TEXT AS "JenisKopi",
         jumlah AS "Jumlah",
-        petugas AS "Petugas"
+        petugas::VARCHAR AS "Petugas"
     FROM vw_outgoing_transactions
     WHERE tanggal >= p_start_date AND tanggal < p_end_date
     ORDER BY tanggal DESC;

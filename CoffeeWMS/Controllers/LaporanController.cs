@@ -25,7 +25,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT \"Tanggal\", \"Supplier\", \"JenisKopi\", \"Jumlah\", \"Petugas\" FROM fn_get_laporan_penerimaan(@s, @e)", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"Tanggal\", \"Supplier\", \"JenisKopi\", \"Jumlah\", \"Petugas\" FROM fn_get_laporan_penerimaan(@s::date, @e::date)", conn))
                     {
                         cmd.Parameters.AddWithValue("s", startDate.Date);
                         cmd.Parameters.AddWithValue("e", endDate.Date.AddDays(1));
@@ -58,7 +58,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT \"Tanggal\", \"Destinasi\", \"JenisKopi\", \"Jumlah\", \"Petugas\" FROM fn_get_laporan_pengiriman(@s, @e)", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT \"Tanggal\", \"Destinasi\", \"JenisKopi\", \"Jumlah\", \"Petugas\" FROM fn_get_laporan_pengiriman(@s::date, @e::date)", conn))
                     {
                         cmd.Parameters.AddWithValue("s", startDate.Date);
                         cmd.Parameters.AddWithValue("e", endDate.Date.AddDays(1));

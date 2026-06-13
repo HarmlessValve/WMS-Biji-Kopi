@@ -57,7 +57,7 @@ namespace CoffeeWMS.Views
             cmbKategori.SelectedIndexChanged += CmbKategori_SelectedIndexChanged;
             cmbOrigin.SelectedIndexChanged += CmbOrigin_SelectedIndexChanged;
 
-            btnSimpan = new Button { Text = "Simpan Pengiriman", Location = new Point(35, 140), Width = 150, Height = 30, BackColor = Color.FromArgb(41, 53, 65), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
+            btnSimpan = new Button { Text = "Simpan Pengiriman", Location = new Point(35, 140), Width = 150, Height = 30, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnSimpan.Click += BtnSimpan_Click;
 
             dgvPengiriman = new DataGridView { Location = new Point(35, 190), Width = 610, Height = 245, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
@@ -175,6 +175,12 @@ namespace CoffeeWMS.Views
                     MessageBox.Show("Data Roast Level belum dipilih!", "Peringatan", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
+            }
+
+            DialogResult dialogResult = MessageBox.Show($"Apakah Anda yakin jumlah berat yang dimasukkan adalah {jumlah} Kg?", "Konfirmasi Jumlah", MessageBoxButtons.YesNo, MessageBoxIcon.Question);
+            if (dialogResult != DialogResult.Yes)
+            {
+                return;
             }
 
             bool sukses = _controller.SimpanPengiriman(destinationId, coffeeId, categoryId, originId, roastLevelId, jumlah, petugasId);

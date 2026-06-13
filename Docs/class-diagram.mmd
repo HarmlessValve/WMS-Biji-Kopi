@@ -1,0 +1,323 @@
+classDiagram
+    direction LR
+
+    class Program {
+        +Main()
+    }
+
+    class DatabaseHelper {
+        -ConnectionString
+        +GetConnection() NpgsqlConnection
+    }
+
+    class User {
+        +int UserId
+        +string Username
+        +string Password
+        +bool IsActive
+        +DateTime CreatedAt
+        +string RolesString
+        +List~Role~ Roles
+    }
+
+    class Role {
+        +int RoleId
+        +string RoleName
+        +string Description
+    }
+
+    class Session {
+        +User CurrentUser
+        +bool IsAdmin
+        +bool IsManager
+        +bool IsPetugas
+    }
+
+    class Supplier {
+        +int SupplierId
+        +string CompanyName
+        +string Address
+        +string Phone
+        +bool IsActive
+    }
+
+    class Destination {
+        +int DestinationId
+        +string DestinationName
+        +string Address
+        +bool IsActive
+    }
+
+    class CoffeeProduct {
+        +int ProductId
+        +string CoffeeName
+        +int? CategoryId
+        +string CategoryName
+        +int? OriginId
+        +string OriginName
+        +int CurrentQuantity
+        +int MinimumStock
+        +bool IsActive
+        +int? RoastLevelId
+        +string RoastLevelName
+    }
+
+    class CoffeeType {
+        +int CoffeeId
+        +string CoffeeName
+        +bool IsActive
+    }
+
+    class CoffeeCategory {
+        +int CategoryId
+        +string CategoryName
+        +string Description
+    }
+
+    class CoffeeOrigin {
+        +int OriginId
+        +string OriginName
+        +string Region
+        +string Description
+        +bool IsActive
+    }
+
+    class RoastLevel {
+        +int RoastLevelId
+        +string RoastLevelName
+        +string Description
+        +bool IsActive
+    }
+
+    class LogEntry {
+        +int LogId
+        +string Actor
+        +string Action
+        +string Description
+        +DateTime LogTime
+    }
+
+    class DropdownItem {
+        +int Id
+        +string Name
+    }
+
+    class LaporanPenerimaanItem {
+        +DateTime Tanggal
+        +string Supplier
+        +string JenisKopi
+        +int Jumlah
+        +string Petugas
+    }
+
+    class LaporanPengirimanItem {
+        +DateTime Tanggal
+        +string Destinasi
+        +string JenisKopi
+        +int Jumlah
+        +string Petugas
+    }
+
+    class BaseForm {
+        +Panel pnlSidebar
+        +Panel pnlHeader
+        +Panel pnlContent
+        +StatusStrip statusStrip
+        +LoadView(Control, string)
+    }
+
+    class MainForm {
+        +ViewLoaded
+        +LogoutRequested
+        +ShowDashboard()
+        +ShowUserManagement()
+        +ShowDataManagement()
+        +CloseView()
+    }
+
+    class LoginForm {
+        +bool IsAuthenticated
+        +string Username
+        +string Password
+        +LoginAttempted
+        +ShowError(string)
+        +CloseView()
+    }
+
+    class UserManagementForm {
+        +bool ShowInactive
+        +LoadUsersRequested
+        +SaveUserRequested
+        +DeleteUserRequested
+        +DisplayUsers(object)
+        +SetAvailableRoles(List~Role~)
+        +ShowMessage(string, bool)
+    }
+
+    class DataManagementForm {
+        +bool ShowInactiveSupplier
+        +bool ShowInactiveDestination
+        +bool ShowInactiveProduct
+        +LoadDataRequested
+        +SaveSupplierRequested
+        +SaveDestinationRequested
+        +AddCoffeeProductRequested
+        +DisplaySuppliers(object)
+        +DisplayDestinations(object)
+        +DisplayCoffeeProducts(object)
+    }
+
+    class AdminDashboardForm {
+        +LoadDashboardRequested
+        +DisplayLogs(object)
+        +DisplaySuppliers(object)
+        +DisplayDestinations(object)
+    }
+
+    class PetugasDashboardForm {
+        +LoadDashboardRequested
+        +DisplaySummary(int, int, int, int)
+        +DisplayStokKopi(object)
+    }
+
+    class PenerimaanView {
+        -PenerimaanController _controller
+        -LoadInitialData()
+        -RefreshGrid()
+    }
+
+    class PengirimanView {
+        -PengirimanController _controller
+        -LoadInitialData()
+        -RefreshGrid()
+    }
+
+    class LaporanView {
+        -LaporanController _controller
+        -LoadSummary(DateTime, DateTime)
+        -LoadLaporan()
+    }
+
+    class PrimaryButton {
+        +OnMouseEnter(EventArgs)
+        +OnMouseLeave(EventArgs)
+    }
+
+    class LoginController {
+        -LoginForm _view
+        -OnLoginAttempted(object, EventArgs)
+    }
+
+    class MainController {
+        -MainForm _view
+        -OnViewLoaded(object, EventArgs)
+        -OnLogoutRequested(object, EventArgs)
+    }
+
+    class UserManagementController {
+        -UserManagementForm _view
+        -GetAllUsers(bool) List~User~
+        -GetAllRoles() List~Role~
+        -AddUser(int, string, string, int[])
+        -UpdateUser(int, int, string, string, bool, int[])
+        -SoftDeleteUser(int, int)
+    }
+
+    class DataManagementController {
+        -DataManagementForm _view
+        +GetSuppliers(bool) List~Supplier~
+        +GetDestinations(bool) List~Destination~
+        +GetCoffeeTypes() List~CoffeeType~
+        +GetCoffeeProducts(bool) List~CoffeeProduct~
+        +GetCoffeeCategories() List~CoffeeCategory~
+        +GetCoffeeOrigins() List~CoffeeOrigin~
+        +GetRoastLevels() List~RoastLevel~
+    }
+
+    class AdminDashboardController {
+        -AdminDashboardForm _view
+        -GetLogs() List~LogEntry~
+        -GetSuppliers() List~Supplier~
+        -GetDestinations() List~Destination~
+    }
+
+    class PetugasDashboardController {
+        -PetugasDashboardForm _view
+        -LoadSummary()
+        -LoadStokKopi()
+    }
+
+    class PenerimaanController {
+        +GetSuppliers() List~DropdownItem~
+        +GetDataPenerimaan() List~LaporanPenerimaanItem~
+        +SimpanPenerimaan(...) bool
+    }
+
+    class PengirimanController {
+        +GetDestinations() List~DropdownItem~
+        +GetDataPengiriman() List~LaporanPengirimanItem~
+        +SimpanPengiriman(...) bool
+    }
+
+    class LaporanController {
+        +GetLaporanPenerimaan(DateTime, DateTime) List~LaporanPenerimaanItem~
+        +GetLaporanPengiriman(DateTime, DateTime) List~LaporanPengirimanItem~
+        +GetLaporanStok() DataTable
+        +GetLaporanStokRendah() DataTable
+    }
+
+    Form <|-- BaseForm
+    BaseForm <|-- MainForm
+    Form <|-- LoginForm
+    UserControl <|-- UserManagementForm
+    UserControl <|-- DataManagementForm
+    UserControl <|-- AdminDashboardForm
+    UserControl <|-- PetugasDashboardForm
+    UserControl <|-- PenerimaanView
+    UserControl <|-- PengirimanView
+    UserControl <|-- LaporanView
+    Button <|-- PrimaryButton
+
+    Program --> LoginForm
+    Program --> LoginController
+    Program --> MainForm
+    Program --> MainController
+
+    User "1" o-- "*" Role
+    Session --> User
+
+    LoginController --> LoginForm
+    MainController --> MainForm
+    UserManagementController --> UserManagementForm
+    DataManagementController --> DataManagementForm
+    AdminDashboardController --> AdminDashboardForm
+    PetugasDashboardController --> PetugasDashboardForm
+    PenerimaanView --> PenerimaanController
+    PengirimanView --> PengirimanController
+    LaporanView --> LaporanController
+
+    UserManagementController --> User
+    UserManagementController --> Role
+    DataManagementController --> Supplier
+    DataManagementController --> Destination
+    DataManagementController --> CoffeeProduct
+    DataManagementController --> CoffeeType
+    DataManagementController --> CoffeeCategory
+    DataManagementController --> CoffeeOrigin
+    DataManagementController --> RoastLevel
+    AdminDashboardController --> LogEntry
+    PenerimaanController --> DropdownItem
+    PenerimaanController --> LaporanPenerimaanItem
+    PengirimanController --> DropdownItem
+    PengirimanController --> LaporanPengirimanItem
+    LaporanController --> LaporanPenerimaanItem
+    LaporanController --> LaporanPengirimanItem
+
+    LoginController --> DatabaseHelper
+    UserManagementController --> DatabaseHelper
+    DataManagementController --> DatabaseHelper
+    AdminDashboardController --> DatabaseHelper
+    PetugasDashboardController --> DatabaseHelper
+    PenerimaanController --> DatabaseHelper
+    PengirimanController --> DatabaseHelper
+    LaporanController --> DatabaseHelper
