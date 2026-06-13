@@ -3,22 +3,30 @@ using System;
 namespace CoffeeWMS.Models
 {
     // Sesuai tabel: suppliers
-    public class Supplier
+    public class Supplier : MasterDataEntity
     {
         public int SupplierId { get; set; }
         public string CompanyName { get; set; }
         public string Address { get; set; }
         public string Phone { get; set; }
-        public bool IsActive { get; set; }
+
+        public override string GetDisplayName()
+        {
+            return CompanyName ?? string.Empty;
+        }
     }
 
     // Sesuai tabel: destinations
-    public class Destination
+    public class Destination : MasterDataEntity
     {
         public int DestinationId { get; set; }
         public string DestinationName { get; set; }
         public string Address { get; set; }
-        public bool IsActive { get; set; }
+
+        public override string GetDisplayName()
+        {
+            return DestinationName ?? string.Empty;
+        }
     }
 
     // Sesuai view: vw_logs (join activity_logs + users)
@@ -32,15 +40,19 @@ namespace CoffeeWMS.Models
     }
 
     // Sesuai tabel: coffee_types
-    public class CoffeeType
+    public class CoffeeType : MasterDataEntity
     {
         public int CoffeeId { get; set; }
         public string CoffeeName { get; set; }
-        public bool IsActive { get; set; }
+
+        public override string GetDisplayName()
+        {
+            return CoffeeName ?? string.Empty;
+        }
     }
 
     // Sesuai view: vw_coffee_products
-    public class CoffeeProduct
+    public class CoffeeProduct : MasterDataEntity
     {
         public int ProductId { get; set; }
         public string CoffeeName { get; set; }
@@ -50,9 +62,16 @@ namespace CoffeeWMS.Models
         public string OriginName { get; set; }
         public int CurrentQuantity { get; set; }
         public int MinimumStock { get; set; }
-        public bool IsActive { get; set; }
         public int? RoastLevelId { get; set; }
         public string RoastLevelName { get; set; }
+
+        public override string GetDisplayName()
+        {
+            var name = $"{CoffeeName} - {CategoryName} - {OriginName}";
+            return string.IsNullOrWhiteSpace(RoastLevelName) || RoastLevelName == "-"
+                ? name
+                : $"{name} ({RoastLevelName})";
+        }
     }
 
     // Sesuai tabel: coffee_categories
@@ -64,22 +83,30 @@ namespace CoffeeWMS.Models
     }
 
     // Sesuai tabel: coffee_origins
-    public class CoffeeOrigin
+    public class CoffeeOrigin : MasterDataEntity
     {
         public int OriginId { get; set; }
         public string OriginName { get; set; }
         public string Region { get; set; }
         public string Description { get; set; }
-        public bool IsActive { get; set; }
+
+        public override string GetDisplayName()
+        {
+            return OriginName ?? string.Empty;
+        }
     }
 
     //sesuai tabel roast_level
-    public class RoastLevel
+    public class RoastLevel : MasterDataEntity
     {
         public int RoastLevelId { get; set; }
         public string RoastLevelName { get; set; }
         public string Description { get; set; }
-        public bool IsActive { get; set; }
+
+        public override string GetDisplayName()
+        {
+            return RoastLevelName ?? string.Empty;
+        }
     }
 
     // Sesuai view: stock_summary
