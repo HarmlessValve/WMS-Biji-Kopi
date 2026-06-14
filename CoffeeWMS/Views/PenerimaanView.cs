@@ -60,9 +60,15 @@ namespace CoffeeWMS.Views
             btnSimpan = new Button { Text = "Simpan Data", Location = new Point(35, 140), Width = 120, Height = 30, BackColor = Color.FromArgb(0, 170, 100), ForeColor = Color.White, FlatStyle = FlatStyle.Flat };
             btnSimpan.Click += BtnSimpan_Click;
 
-            dgvPenerimaan = new DataGridView { Location = new Point(35, 190), Width = 610, Height = 245, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
+            Panel pnlTop = new Panel { Dock = DockStyle.Top, Height = 190 };
+            pnlTop.Controls.AddRange(new Control[] { lblTitle, lblSupplier, cmbSupplier, lblJenis, cmbJenisKopi, lblKategori, cmbKategori, lblJumlah, txtJumlah, lblOrigin, cmbOrigin, lblRoastLevel, cmbRoastLevel, btnSimpan });
 
-            this.Controls.AddRange(new Control[] { lblTitle, lblSupplier, cmbSupplier, lblJenis, cmbJenisKopi, lblKategori, cmbKategori, lblJumlah, txtJumlah, lblOrigin, cmbOrigin, lblRoastLevel, cmbRoastLevel, btnSimpan, dgvPenerimaan });
+            Panel pnlGrid = new Panel { Dock = DockStyle.Fill, Padding = new Padding(35, 0, 35, 35) };
+            dgvPenerimaan = new DataGridView { Dock = DockStyle.Fill, BackgroundColor = Color.FromArgb(240, 240, 240), AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill, RowHeadersVisible = false, AllowUserToAddRows = false };
+            pnlGrid.Controls.Add(dgvPenerimaan);
+
+            this.Controls.Add(pnlGrid);
+            this.Controls.Add(pnlTop);
         }
 
         // =====================================================================

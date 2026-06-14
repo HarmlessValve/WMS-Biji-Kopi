@@ -39,7 +39,7 @@ namespace CoffeeWMS.Views
             pnlLogo.Height = 70;
             
             this.lblLogo = new Label();
-            this.lblLogo.Text = "â˜• CoffeeWMS";
+            this.lblLogo.Text = "🍵 • CoffeeWMS";
             this.lblLogo.ForeColor = Color.White;
             this.lblLogo.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             this.lblLogo.AutoSize = false;

@@ -70,7 +70,7 @@ namespace CoffeeWMS.Views
             this.lblTitle.Name = "lblTitle";
             this.lblTitle.Size = new Size(400, 30);
             this.lblTitle.TabIndex = 0;
-            this.lblTitle.Text = "â˜• CoffeeWMS";
+            this.lblTitle.Text = "🍵 • CoffeeWMS";
             this.lblTitle.TextAlign = ContentAlignment.MiddleCenter;
             // 
             // lblSubtitle

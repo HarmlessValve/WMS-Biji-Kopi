@@ -25,7 +25,6 @@ namespace CoffeeWMS.Views
         {
             this.BackColor = Color.White;
             this.Dock = DockStyle.Fill;
-            this.Padding = new Padding(20);
 
             Label title = new Label
             {
@@ -34,8 +33,6 @@ namespace CoffeeWMS.Views
                 AutoSize = true,
                 Location = new Point(20, 20)
             };
-            this.Controls.Add(title);
-
             // Summary Cards Panel
             FlowLayoutPanel flpSummary = new FlowLayoutPanel
             {
@@ -54,7 +51,6 @@ namespace CoffeeWMS.Views
             flpSummary.Controls.Add(pnlMenipis);
             flpSummary.Controls.Add(pnlMasuk);
             flpSummary.Controls.Add(pnlKeluar);
-            this.Controls.Add(flpSummary);
 
             // Table Label
             Label lblTable = new Label
@@ -64,14 +60,16 @@ namespace CoffeeWMS.Views
                 AutoSize = true,
                 Location = new Point(20, 210)
             };
-            this.Controls.Add(lblTable);
 
-            // DataGridView
+            Panel pnlTop = new Panel { Dock = DockStyle.Top, Height = 250 };
+            pnlTop.Controls.Add(title);
+            pnlTop.Controls.Add(flpSummary);
+            pnlTop.Controls.Add(lblTable);
+
+            Panel pnlGrid = new Panel { Dock = DockStyle.Fill, Padding = new Padding(20, 0, 20, 20) };
             dgvStokKopi = new DataGridView
             {
-                Location = new Point(20, 250),
-                Width = 900,
-                Height = 350,
+                Dock = DockStyle.Fill,
                 AllowUserToAddRows = false,
                 AllowUserToDeleteRows = false,
                 ReadOnly = true,
@@ -80,10 +78,12 @@ namespace CoffeeWMS.Views
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None,
                 ColumnHeadersHeight = 40,
-                RowTemplate = { Height = 35 },
-                Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
+                RowTemplate = { Height = 35 }
             };
-            this.Controls.Add(dgvStokKopi);
+            pnlGrid.Controls.Add(dgvStokKopi);
+
+            this.Controls.Add(pnlGrid);
+            this.Controls.Add(pnlTop);
         }
 
         private Panel CreateCard(string title, out Label valLabel)

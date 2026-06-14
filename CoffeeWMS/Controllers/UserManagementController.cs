@@ -156,7 +156,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT role_id, role_name, description FROM roles", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT role_id, role_name, description FROM vw_roles", conn))
                     {
                         using (var reader = cmd.ExecuteReader())
                         {

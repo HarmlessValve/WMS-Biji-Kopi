@@ -13,14 +13,24 @@ static class Program
     {
         ApplicationConfiguration.Initialize();
         
-        var loginView = new LoginForm();
-        var loginController = new LoginController(loginView);
-
-        if (loginView.ShowDialog() == DialogResult.OK)
+        bool isLogout = true;
+        while (isLogout)
         {
-            var mainView = new MainForm();
-            var mainController = new MainController(mainView);
-            Application.Run(mainView);
+            isLogout = false;
+            var loginView = new LoginForm();
+            var loginController = new LoginController(loginView);
+
+            if (loginView.ShowDialog() == DialogResult.OK)
+            {
+                var mainView = new MainForm();
+                var mainController = new MainController(mainView);
+                Application.Run(mainView);
+                
+                if (mainView.DialogResult == DialogResult.Retry)
+                {
+                    isLogout = true;
+                }
+            }
         }
-    }    
+    }
 }

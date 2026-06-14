@@ -52,7 +52,7 @@ namespace CoffeeWMS.Views
             var pnlSuppliers = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
             var lblSuppliers = new Label { Text = "Suppliers", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
             dgvSuppliers = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true,
-                                            AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false
+                                            AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
                                             };
             pnlSuppliers.Controls.Add(dgvSuppliers);
             pnlSuppliers.Controls.Add(lblSuppliers);
@@ -62,7 +62,7 @@ namespace CoffeeWMS.Views
             var pnlDestinations = new Panel { Dock = DockStyle.Fill, Padding = new Padding(10) };
             var lblDestinations = new Label { Text = "Destinations", Dock = DockStyle.Top, Font = new Font("Segoe UI", 12, FontStyle.Bold), Height = 30 };
             dgvDestinations = new DataGridView { Dock = DockStyle.Fill, AutoGenerateColumns = true, ReadOnly = true,
-                                                AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false
+                                                AllowUserToAddRows = false, BackgroundColor = Color.White, RowHeadersVisible = false, AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill
                                                 };
             pnlDestinations.Controls.Add(dgvDestinations);
             pnlDestinations.Controls.Add(lblDestinations);

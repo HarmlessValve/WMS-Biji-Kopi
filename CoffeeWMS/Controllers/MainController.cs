@@ -24,6 +24,7 @@ namespace CoffeeWMS.Controllers
         private void OnLogoutRequested(object sender, EventArgs e)
         {
             Session.CurrentUser = null;
+            _view.DialogResult = System.Windows.Forms.DialogResult.Retry;
             _view.CloseView();
         }
     }

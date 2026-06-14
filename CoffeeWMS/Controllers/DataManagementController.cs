@@ -373,7 +373,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, is_active FROM coffee_types ORDER BY coffee_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT coffee_id, coffee_name, is_active FROM vw_coffee_types", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -434,24 +434,17 @@ namespace CoffeeWMS.Controllers
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand(
-                    "UPDATE coffee_products SET coffee_id=@cf, category_id=@ct, origin_id=@o, roast_level_id=@rl, minimum_stock=@m, is_active=@active, last_updated=NOW() WHERE product_id=@pid", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_update_coffee_product(@u, @pid, @cf, @ct, @o, @rl, @m, @active)", conn))
                 {
+                    cmd.Parameters.AddWithValue("u", adminId);
+                    cmd.Parameters.AddWithValue("pid", productId);
                     cmd.Parameters.AddWithValue("cf", coffeeId);
                     cmd.Parameters.AddWithValue("ct", categoryId);
                     cmd.Parameters.AddWithValue("o", originId);
                     cmd.Parameters.AddWithValue("rl", roastLevelId.HasValue ? roastLevelId.Value : (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("m", minimumStock);
                     cmd.Parameters.AddWithValue("active", isActive);
-                    cmd.Parameters.AddWithValue("pid", productId);
                     cmd.ExecuteNonQuery();
-                }
-
-                using (var logCmd = new NpgsqlCommand("INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'UPDATE', 'Update Produk Kopi ID: ' || @pid)", conn))
-                {
-                    logCmd.Parameters.AddWithValue("u", adminId);
-                    logCmd.Parameters.AddWithValue("pid", productId);
-                    logCmd.ExecuteNonQuery();
                 }
             }
         }
@@ -461,20 +454,15 @@ namespace CoffeeWMS.Controllers
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("INSERT INTO coffee_products (coffee_id, category_id, origin_id, roast_level_id, current_quantity, minimum_stock, last_updated, is_active) VALUES (@cf, @ct, @o, @rl, 0, @m, NOW(), true)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_product(@u, @cf, @ct, @o, @rl, @m)", conn))
                 {
+                    cmd.Parameters.AddWithValue("u", adminId);
                     cmd.Parameters.AddWithValue("cf", coffeeId);
                     cmd.Parameters.AddWithValue("ct", categoryId);
                     cmd.Parameters.AddWithValue("o", originId);
                     cmd.Parameters.AddWithValue("rl", roastLevelId.HasValue ? roastLevelId.Value : (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("m", minimumStock);
                     cmd.ExecuteNonQuery();
-                }
-
-                using (var logCmd = new NpgsqlCommand("INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Produk Kopi')", conn))
-                {
-                    logCmd.Parameters.AddWithValue("u", adminId);
-                    logCmd.ExecuteNonQuery();
                 }
             }
         }
@@ -501,7 +489,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT category_id, category_name, description FROM coffee_categories ORDER BY category_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT category_id, category_name, description FROM vw_coffee_categories", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -528,7 +516,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT roast_level_id, roast_level_name, description, is_active FROM roast_levels WHERE is_active = true ORDER BY roast_level_id", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT roast_level_id, roast_level_name, description, is_active FROM vw_active_roast_levels", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -556,7 +544,7 @@ namespace CoffeeWMS.Controllers
                 using (var conn = DatabaseHelper.GetConnection())
                 {
                     conn.Open();
-                    using (var cmd = new NpgsqlCommand("SELECT origin_id, origin_name, region, description, is_active FROM coffee_origins WHERE is_active = true ORDER BY origin_name", conn))
+                    using (var cmd = new NpgsqlCommand("SELECT origin_id, origin_name, region, description, is_active FROM vw_active_coffee_origins", conn))
                     using (var reader = cmd.ExecuteReader())
                     {
                         while (reader.Read())
@@ -582,19 +570,13 @@ namespace CoffeeWMS.Controllers
             using (var conn = DatabaseHelper.GetConnection())
             {
                 conn.Open();
-                using (var cmd = new NpgsqlCommand("INSERT INTO coffee_origins (origin_name, region, description, is_active) VALUES (@n, @r, @d, true)", conn))
+                using (var cmd = new NpgsqlCommand("CALL sp_add_coffee_origin(@u, @n, @r, @d)", conn))
                 {
+                    cmd.Parameters.AddWithValue("u", adminId);
                     cmd.Parameters.AddWithValue("n", origin.OriginName);
                     cmd.Parameters.AddWithValue("r", origin.Region ?? (object)DBNull.Value);
                     cmd.Parameters.AddWithValue("d", origin.Description ?? (object)DBNull.Value);
                     cmd.ExecuteNonQuery();
-                    
-                    using (var logCmd = new NpgsqlCommand("INSERT INTO activity_logs (user_id, action, description) VALUES (@u, 'TAMBAH', 'Tambah Coffee Origin: ' || @n)", conn))
-                    {
-                        logCmd.Parameters.AddWithValue("u", adminId);
-                        logCmd.Parameters.AddWithValue("n", origin.OriginName);
-                        logCmd.ExecuteNonQuery();
-                    }
                 }
             }
         }

@@ -151,11 +151,21 @@ namespace CoffeeWMS.Views
             lblTotalStok       = CreateSummaryCard("Total Stok", "0 kg", 430, 165);
             lblStokRendah      = CreateSummaryCard("Stok Rendah", "0 item", 630, 165);
 
+            Panel pnlTop = new Panel { Dock = DockStyle.Top, Height = 255 };
+            pnlTop.Controls.AddRange(new Control[]
+            {
+                lblTitle, lblSubtitle,
+                lblMulai, dtpMulai,
+                lblSelesai, dtpSelesai,
+                lblJenis, cmbJenisLaporan,
+                btnTampilkan, btnRefresh,
+                lblTotalPenerimaan, lblTotalPengiriman, lblTotalStok, lblStokRendah
+            });
+
+            Panel pnlGrid = new Panel { Dock = DockStyle.Fill, Padding = new Padding(30, 0, 30, 30) };
             dgvLaporan = new DataGridView
             {
-                Location              = new Point(30, 255),
-                Size                  = new Size(850, 360),
-                Anchor                = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right,
+                Dock                  = DockStyle.Fill,
                 BackgroundColor       = Color.White,
                 BorderStyle           = BorderStyle.FixedSingle,
                 AutoSizeColumnsMode   = DataGridViewAutoSizeColumnsMode.Fill,
@@ -165,6 +175,7 @@ namespace CoffeeWMS.Views
                 SelectionMode         = DataGridViewSelectionMode.FullRowSelect,
                 RowHeadersVisible     = false
             };
+            pnlGrid.Controls.Add(dgvLaporan);
 
             dgvLaporan.ColumnHeadersDefaultCellStyle.BackColor = Color.FromArgb(41, 53, 65);
             dgvLaporan.ColumnHeadersDefaultCellStyle.ForeColor = Color.White;
@@ -175,16 +186,8 @@ namespace CoffeeWMS.Views
             dgvLaporan.DefaultCellStyle.SelectionBackColor     = Color.FromArgb(52, 152, 219);
             dgvLaporan.DefaultCellStyle.SelectionForeColor     = Color.White;
 
-            this.Controls.AddRange(new Control[]
-            {
-                lblTitle, lblSubtitle,
-                lblMulai, dtpMulai,
-                lblSelesai, dtpSelesai,
-                lblJenis, cmbJenisLaporan,
-                btnTampilkan, btnRefresh,
-                lblTotalPenerimaan, lblTotalPengiriman, lblTotalStok, lblStokRendah,
-                dgvLaporan
-            });
+            this.Controls.Add(pnlGrid);
+            this.Controls.Add(pnlTop);
         }
 
         private Label CreateSummaryCard(string title, string value, int x, int y)

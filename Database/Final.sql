@@ -42,7 +42,9 @@ DROP PROCEDURE IF EXISTS sp_soft_delete_destination(INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_coffee_type(INT, VARCHAR);
 DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_type(INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_coffee_product(INT, INT, INT, INT, INT, INT);
+DROP PROCEDURE IF EXISTS sp_update_coffee_product(INT, INT, INT, INT, INT, INT, INT, BOOLEAN);
 DROP PROCEDURE IF EXISTS sp_soft_delete_coffee_product(INT, INT);
+DROP PROCEDURE IF EXISTS sp_add_coffee_origin(INT, VARCHAR, VARCHAR, TEXT);
 DROP PROCEDURE IF EXISTS sp_add_incoming_transaction(INT, INT, INT, INT);
 DROP PROCEDURE IF EXISTS sp_add_outgoing_transaction(INT, INT, INT, INT);
 
@@ -55,6 +57,11 @@ DROP VIEW IF EXISTS vw_suppliers               CASCADE;
 DROP VIEW IF EXISTS vw_logs                    CASCADE;
 DROP VIEW IF EXISTS stock_summary              CASCADE;
 DROP VIEW IF EXISTS vw_user_roles              CASCADE;
+DROP VIEW IF EXISTS vw_roles                   CASCADE;
+DROP VIEW IF EXISTS vw_coffee_types            CASCADE;
+DROP VIEW IF EXISTS vw_coffee_categories       CASCADE;
+DROP VIEW IF EXISTS vw_active_roast_levels     CASCADE;
+DROP VIEW IF EXISTS vw_active_coffee_origins   CASCADE;
 
 DROP INDEX IF EXISTS idx_coffee_products_unique_with_roast;
 
@@ -256,9 +263,22 @@ SELECT setval(pg_get_serial_sequence('coffee_types', 'coffee_id'), MAX(coffee_id
 
 -- 2e. Asal Daerah
 INSERT INTO coffee_origins (origin_id, origin_name, region, description, is_active) VALUES
-    (1, 'Aceh Tengah', 'Sumatera', 'Dataran Tinggi Gayo',    true),
-    (2, 'Tana Toraja', 'Sulawesi', 'Pegunungan Toraja',       true),
-    (3, 'Tanggamus',   'Sumatera', 'Dataran Rendah Lampung',  true)
+    (1, 'Gayo',        'Sumatera', 'Aceh Tengah',               true),
+    (2, 'Toraja',      'Sulawesi', 'Tana Toraja',               true),
+    (3, 'Lampung',     'Sumatera', 'Tanggamus / Lampung Barat', true),
+    (4, 'Mandailing',  'Sumatera', 'Sumatera Utara',            true),
+    (5, 'Lintong',     'Sumatera', 'Humbang Hasundutan',        true),
+    (6, 'Sidikalang',  'Sumatera', 'Dairi, Sumatera Utara',     true),
+    (7, 'Kerinci',     'Sumatera', 'Gunung Kerinci, Jambi',     true),
+    (8, 'Preanger',    'Jawa',     'Jawa Barat',                true),
+    (9, 'Ijen',        'Jawa',     'Bondowoso / Banyuwangi',    true),
+    (10, 'Temanggung', 'Jawa',     'Sindoro Sumbing',           true),
+    (11, 'Kintamani',  'Bali',     'Gunung Batur, Bangli',      true),
+    (12, 'Bajawa',     'Flores',   'Ngada, NTT',                true),
+    (13, 'Manggarai',  'Flores',   'Manggarai, NTT',            true),
+    (14, 'Kalosi',     'Sulawesi', 'Enrekang',                  true),
+    (15, 'Wamena',     'Papua',    'Lembah Baliem, Jayawijaya', true),
+    (16, 'Moanemani',  'Papua',    'Dogiyai',                   true)
 ON CONFLICT (origin_id) DO UPDATE SET
     origin_name = EXCLUDED.origin_name,
     region      = EXCLUDED.region,
@@ -447,6 +467,11 @@ LEFT JOIN user_roles ur ON u.user_id = ur.user_id
 LEFT JOIN roles r       ON ur.role_id = r.role_id
 GROUP BY u.user_id, u.username, u.is_active, u.created_at;
 
+-- 5a.1 Roles
+CREATE OR REPLACE VIEW vw_roles AS
+SELECT role_id, role_name, description
+FROM roles;
+
 -- 5b. Ringkasan Stok
 CREATE OR REPLACE VIEW stock_summary AS
 SELECT
@@ -514,6 +539,32 @@ LEFT JOIN coffee_categories cc ON cp.category_id    = cc.category_id
 LEFT JOIN coffee_origins    co ON cp.origin_id      = co.origin_id
 LEFT JOIN roast_levels      rl ON cp.roast_level_id = rl.roast_level_id
 ORDER BY ct.coffee_name;
+
+-- 5f.1 Coffee Types
+CREATE OR REPLACE VIEW vw_coffee_types AS
+SELECT coffee_id, coffee_name, is_active
+FROM coffee_types
+ORDER BY coffee_name;
+
+-- 5f.2 Coffee Categories
+CREATE OR REPLACE VIEW vw_coffee_categories AS
+SELECT category_id, category_name, description
+FROM coffee_categories
+ORDER BY category_name;
+
+-- 5f.3 Active Roast Levels
+CREATE OR REPLACE VIEW vw_active_roast_levels AS
+SELECT roast_level_id, roast_level_name, description, is_active
+FROM roast_levels
+WHERE is_active = true
+ORDER BY roast_level_id;
+
+-- 5f.4 Active Coffee Origins
+CREATE OR REPLACE VIEW vw_active_coffee_origins AS
+SELECT origin_id, origin_name, region, description, is_active
+FROM coffee_origins
+WHERE is_active = true
+ORDER BY origin_name;
 
 -- 5g. Transaksi Masuk
 CREATE OR REPLACE VIEW vw_incoming_transactions AS
@@ -861,6 +912,51 @@ BEGIN
 
     INSERT INTO activity_logs (user_id, action, description)
     VALUES (p_admin_id, 'SOFT_DELETE_COFFEE_PRODUCT', 'Deactivated product_id: ' || p_product_id);
+END;
+$$;
+
+-- 8i. Update Produk Kopi
+CREATE OR REPLACE PROCEDURE sp_update_coffee_product(
+    p_admin_id      INT,
+    p_product_id    INT,
+    p_coffee_id     INT,
+    p_category_id   INT,
+    p_origin_id     INT,
+    p_roast_level_id INT,
+    p_minimum_stock INT,
+    p_is_active     BOOLEAN
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+    UPDATE coffee_products
+    SET coffee_id = p_coffee_id,
+        category_id = p_category_id,
+        origin_id = p_origin_id,
+        roast_level_id = CASE WHEN p_roast_level_id > 0 THEN p_roast_level_id ELSE NULL END,
+        minimum_stock = p_minimum_stock,
+        is_active = p_is_active,
+        last_updated = CURRENT_TIMESTAMP
+    WHERE product_id = p_product_id;
+
+    INSERT INTO activity_logs (user_id, action, description)
+    VALUES (p_admin_id, 'UPDATE_COFFEE_PRODUCT', 'Updated product_id: ' || p_product_id);
+END;
+$$;
+
+-- 8j. Add Coffee Origin
+CREATE OR REPLACE PROCEDURE sp_add_coffee_origin(
+    p_admin_id   INT,
+    p_origin_name VARCHAR,
+    p_region      VARCHAR,
+    p_description TEXT
+)
+LANGUAGE plpgsql AS $$
+BEGIN
+    INSERT INTO coffee_origins (origin_name, region, description, is_active)
+    VALUES (p_origin_name, p_region, p_description, true);
+
+    INSERT INTO activity_logs (user_id, action, description)
+    VALUES (p_admin_id, 'CREATE_COFFEE_ORIGIN', 'Added coffee origin: ' || p_origin_name);
 END;
 $$;
 
