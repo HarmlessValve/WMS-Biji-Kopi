@@ -48,7 +48,7 @@ Setelah selesai, buat **Pull Request** via web repositori Anda (GitHub/GitLab). 
 
 ## How to Run
 
-1. Buka Folder `Docs` dan paste Final.sql ke database.
+1. Buka Folder `Database` dan paste Final.sql ke database (jangan lupa set path user sm db nya cuy).
 2. Copy, paste dan sesuaikan koneksi DatabaseHelpers.example.txt ke `CoffeeWSM/Data/Helpers/DatabaseHelpers.cs`.
 3. Run Program.
 4. Login Admin adalah Username: Admin, Password: Admin123.
