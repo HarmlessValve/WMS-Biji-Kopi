@@ -10,6 +10,18 @@ classDiagram
         +GetConnection() NpgsqlConnection
     }
 
+    class IDisplayableModel {
+        <<interface>>
+        +GetDisplayName() string
+    }
+
+    class MasterDataEntity {
+        <<abstract>>
+        +bool IsActive
+        +string StatusText
+        +GetDisplayName()* string
+    }
+
     class User {
         +int UserId
         +string Username
@@ -38,14 +50,14 @@ classDiagram
         +string CompanyName
         +string Address
         +string Phone
-        +bool IsActive
+        +GetDisplayName() string
     }
 
     class Destination {
         +int DestinationId
         +string DestinationName
         +string Address
-        +bool IsActive
+        +GetDisplayName() string
     }
 
     class CoffeeProduct {
@@ -57,15 +69,15 @@ classDiagram
         +string OriginName
         +int CurrentQuantity
         +int MinimumStock
-        +bool IsActive
         +int? RoastLevelId
         +string RoastLevelName
+        +GetDisplayName() string
     }
 
     class CoffeeType {
         +int CoffeeId
         +string CoffeeName
-        +bool IsActive
+        +GetDisplayName() string
     }
 
     class CoffeeCategory {
@@ -79,14 +91,14 @@ classDiagram
         +string OriginName
         +string Region
         +string Description
-        +bool IsActive
+        +GetDisplayName() string
     }
 
     class RoastLevel {
         +int RoastLevelId
         +string RoastLevelName
         +string Description
-        +bool IsActive
+        +GetDisplayName() string
     }
 
     class LogEntry {
@@ -277,6 +289,13 @@ classDiagram
     UserControl <|-- PengirimanView
     UserControl <|-- LaporanView
     Button <|-- PrimaryButton
+    IDisplayableModel <|.. MasterDataEntity
+    MasterDataEntity <|-- Supplier
+    MasterDataEntity <|-- Destination
+    MasterDataEntity <|-- CoffeeType
+    MasterDataEntity <|-- CoffeeProduct
+    MasterDataEntity <|-- CoffeeOrigin
+    MasterDataEntity <|-- RoastLevel
 
     Program --> LoginForm
     Program --> LoginController
