@@ -1,25 +1,25 @@
 # CoffeeWMS
 
 ## Cara Menambahkan Menu di Sidebar / Dashboard
-Menu aplikasi pada CoffeeWMS dibuat secara dinamis menggunakan C# murni tanpa Visual Studio Designer. Jika Anda ingin menambahkan tombol menu baru, ikuti panduan berikut:
+Mint akuh gapake Visual Studio dawg. kalau mau buat pake kode gini ya
 
 1. Buka file `Views/MainForm.cs`.
 2. Cari metode `InitializeMenus()`.
-3. Gunakan metode `AddMenuItem()` untuk menambahkan tombol baru.
-4. Tambahkan `currentTop += 40;` di baris selanjutnya untuk memberi jarak (margin) ke bawah.
+3. pake metode `AddMenuItem()` buat nambahin tombol baru.
+4. Tambahin `currentTop += 40;` di baris selanjutnya buat ngasih jarak (margin) ke bawah.
 
 **Contoh Penulisan:**
 ```csharp
-// Menambahkan menu Stok Barang
+// nambahin menu Stok Barang
 AddMenuItem("📦 Stok Barang", currentTop, ShowStokBarang);
-currentTop += 40;
+currentTop += 40; // ngasih jarak (margin) ke bawah.
 ```
 
 ---
 
-## Panduan Kontribusi Singkat (Git Cheat Sheet)
+## How to Contribute
 
-Untuk meminimalkan konflik, ikuti alur Git sederhana berikut:
+Biar gak conflict, ikuti alur Git sederhana berikut:
 
 ```bash
 # 1. Sinkronisasi dengan main terbaru
@@ -43,3 +43,24 @@ git push origin nama-branch-fitur-anda
 ```
 
 Setelah selesai, buat **Pull Request** via web repositori Anda (GitHub/GitLab). Biarkan Admin yang menyetujui (Approve).
+
+---
+
+## How to Run
+
+1. Buka Folder `Docs` dan paste Final.sql ke database.
+2. Copy, paste dan sesuaikan koneksi DatabaseHelpers.example.txt ke `CoffeeWSM/Data/Helpers/DatabaseHelpers.cs`.
+3. Run Program.
+4. Login Admin adalah Username: Admin, Password: Admin123.
+
+---
+
+## Documentation
+
+Dokumentasi gambar arsitektur dan database dari sistem CoffeeWMS:
+
+### Entity Relationship Diagram (ERD)
+![ERD](Docs/ERD.png)
+
+### Class Diagram
+![Class Diagram](Docs/class-diagram.svg)
