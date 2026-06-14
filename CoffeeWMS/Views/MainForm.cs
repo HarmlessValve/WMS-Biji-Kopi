@@ -9,6 +9,8 @@ namespace CoffeeWMS.Views
         public event EventHandler ViewLoaded;
         public event EventHandler LogoutRequested;
 
+        private bool _isPetugasMode = false;
+
         public MainForm()
         {
             InitializeComponent();
@@ -83,17 +85,68 @@ namespace CoffeeWMS.Views
 
         public void ShowDashboard()
         {
-            if (Session.IsAdmin || Session.IsManager)
+            bool canToggle = Session.IsAdmin || (Session.IsManager && Session.IsPetugas);
+
+            if (!canToggle)
             {
-                var view = new AdminDashboardForm();
-                var controller = new CoffeeWMS.Controllers.AdminDashboardController(view);
-                LoadView(view, Session.IsAdmin ? "Admin Dashboard" : "Manager Dashboard");
+                _isPetugasMode = Session.IsPetugas && !Session.IsAdmin && !Session.IsManager;
+            }
+
+            if (!_isPetugasMode)
+            {
+                if (Session.IsAdmin || Session.IsManager)
+                {
+                    var view = new AdminDashboardForm();
+                    var controller = new CoffeeWMS.Controllers.AdminDashboardController(view);
+                    LoadView(view, Session.IsAdmin ? "Admin Dashboard" : "Manager Dashboard");
+                }
+                else
+                {
+                    // Fallback if not admin/manager and not petugas mode (should not happen usually)
+                    var view = new PetugasDashboardForm();
+                    var controller = new CoffeeWMS.Controllers.PetugasDashboardController(view);
+                    LoadView(view, "Dashboard Petugas");
+                }
             }
             else
             {
                 var view = new PetugasDashboardForm();
                 var controller = new CoffeeWMS.Controllers.PetugasDashboardController(view);
                 LoadView(view, "Dashboard Petugas");
+            }
+
+            if (canToggle)
+            {
+                FlowLayoutPanel togglePanel = new FlowLayoutPanel();
+                togglePanel.AutoSize = true;
+                togglePanel.FlowDirection = FlowDirection.LeftToRight;
+                // Position it at the right side of the header. pnlHeader.Width will adjust, but using anchors is better.
+                togglePanel.Location = new Point(pnlHeader.Width - 260, 25);
+                togglePanel.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+
+                Label lblMode = new Label { Text = "Mode Dashboard:", AutoSize = true, Margin = new Padding(0, 2, 5, 0), Font = new Font("Segoe UI", 10F, FontStyle.Regular) };
+
+                LinkLabel lnkManager = new LinkLabel { Text = Session.IsAdmin ? "Admin" : "Manager", AutoSize = true, Margin = new Padding(0, 2, 5, 0), Font = new Font("Segoe UI", 10F, FontStyle.Bold) };
+                lnkManager.LinkBehavior = LinkBehavior.HoverUnderline;
+                lnkManager.LinkColor = _isPetugasMode ? Color.Gray : Color.FromArgb(41, 53, 65);
+                lnkManager.Enabled = _isPetugasMode;
+                lnkManager.Click += (s, e) => { _isPetugasMode = false; ShowDashboard(); };
+
+                Label lblSep = new Label { Text = "|", AutoSize = true, Margin = new Padding(0, 2, 5, 0), Font = new Font("Segoe UI", 10F, FontStyle.Regular) };
+
+                LinkLabel lnkPetugas = new LinkLabel { Text = "Petugas", AutoSize = true, Margin = new Padding(0, 2, 5, 0), Font = new Font("Segoe UI", 10F, FontStyle.Bold) };
+                lnkPetugas.LinkBehavior = LinkBehavior.HoverUnderline;
+                lnkPetugas.LinkColor = !_isPetugasMode ? Color.Gray : Color.FromArgb(41, 53, 65);
+                lnkPetugas.Enabled = !_isPetugasMode;
+                lnkPetugas.Click += (s, e) => { _isPetugasMode = true; ShowDashboard(); };
+
+                togglePanel.Controls.Add(lblMode);
+                togglePanel.Controls.Add(lnkManager);
+                togglePanel.Controls.Add(lblSep);
+                togglePanel.Controls.Add(lnkPetugas);
+
+                pnlHeader.Controls.Add(togglePanel);
+                togglePanel.BringToFront();
             }
         }
 
