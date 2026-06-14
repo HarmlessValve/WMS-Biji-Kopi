@@ -1,4 +1,21 @@
 -- ============================================================================
+-- KONFIGURASI SCHEMA BARU
+-- ============================================================================
+-- Ganti "coffee_warehouse" di bawah ini dengan nama schema yang Anda mau.
+-- Schema akan dibuat (jika belum ada), lalu search_path session ini diarahkan
+-- ke schema tersebut terlebih dahulu (fallback ke public).
+--
+-- Akibatnya: SEMUA objek di bawah ini (table, view, function, procedure,
+-- trigger, index) akan otomatis dibuat di schema "coffee_warehouse" --
+-- TANPA perlu mengubah satu pun nama objek di seluruh script ini.
+-- ============================================================================
+
+CREATE SCHEMA IF NOT EXISTS coffee_warehouse;
+
+SET search_path TO coffee_warehouse, public;
+
+
+-- ============================================================================
 -- COFFEE WAREHOUSE MANAGEMENT SYSTEM
 -- Schema lengkap: DDL + Triggers + Views + Functions + Stored Procedures + Seed Data
 -- Versi: Perbaikan gabungan (struktur bersih, sequence aman, konsisten)
@@ -62,6 +79,8 @@ DROP VIEW IF EXISTS vw_coffee_types            CASCADE;
 DROP VIEW IF EXISTS vw_coffee_categories       CASCADE;
 DROP VIEW IF EXISTS vw_active_roast_levels     CASCADE;
 DROP VIEW IF EXISTS vw_active_coffee_origins   CASCADE;
+DROP VIEW IF EXISTS vw_active_suppliers        CASCADE;
+DROP VIEW IF EXISTS vw_active_destinations     CASCADE;
 
 DROP INDEX IF EXISTS idx_coffee_products_unique_with_roast;
 
@@ -1173,3 +1192,38 @@ BEGIN
     ORDER BY tanggal DESC;
 END;
 $$ LANGUAGE plpgsql;
+-- ============================================================================
+-- SECTION 11: CARA MENGALIHKAN APLIKASI KE SCHEMA BARU INI (PostgreSQL)
+-- ============================================================================
+ALTER ROLE postgres IN DATABASE smg_kopi SET search_path TO coffee_warehouse, public;
+SHOW search_path;
+
+-- Setelah script di atas dijalankan, semua objek (tabel, view, function,
+-- procedure, trigger, index) berada di schema "coffee_warehouse", BUKAN di
+-- "public". Database lama di "public" tetap aman, tidak tersentuh.
+--
+-- Agar aplikasi Anda otomatis memanggil objek-objek di "coffee_warehouse"
+-- TANPA mengubah kode program (nama tabel/SP/fungsi tetap sama), atur
+-- search_path untuk role/user database yang dipakai aplikasi:
+--
+--     ALTER ROLE username_aplikasi_kamu SET search_path TO coffee_warehouse, public;
+--
+-- Cara kerja:
+--   - Setiap koneksi baru dari user tersebut akan memiliki search_path
+--     = coffee_warehouse, public secara default.
+--   - Saat aplikasi memanggil sp_add_incoming_transaction(), vw_logs,
+--     stock_summary, dll (tanpa prefix schema), PostgreSQL akan mencari di
+--     "coffee_warehouse" dahulu. Jika ditemukan, itulah yang dijalankan.
+--   - Jika suatu objek TIDAK ada di "coffee_warehouse" (misal Anda belum
+--     migrasi sebagian objek), PostgreSQL otomatis fallback mencari ke
+--     "public".
+--
+-- Untuk verifikasi search_path yang aktif untuk user tertentu:
+--     SELECT rolname, rolconfig FROM pg_roles WHERE rolname = 'username_aplikasi_kamu';
+--
+-- Untuk mengecek search_path pada koneksi yang sedang berjalan:
+--     SHOW search_path;
+--
+-- Jika suatu saat ingin rollback (kembali pakai schema "public" saja):
+--     ALTER ROLE username_aplikasi_kamu RESET search_path;
+-- ============================================================================
